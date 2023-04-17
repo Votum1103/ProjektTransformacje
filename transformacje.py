@@ -107,7 +107,51 @@ współrzędnych topocentrycznych
             neu = Rneu.T @ X_sr
             return neu
 
+    def fl_2_2000(self ,nazwa_elipsoidy , l0):
+        
+            phi = np.rad2deg(self.phi)
+            lam = self.lam
+            if phi and lam is not None:
+                if nazwa_elipsoidy == "WRG84" or "GRS80":
+                    a = 6378137
+                    e2 = 0.00669438002290
+                    m = 0.999923
+                elif nazwa_elipsoidy == "Krasowski":
+                    a = 6378245
+                    e2 = 0.00669342
+                    m = 1
+                else:
+                    print("Nie ma możliwości wyboru takiej elipsoidy")
+                
+                b2 = (a**2)*(1-e2)
+                ep2 = (a**2 - b2)/b2
+                dl = np.deg2rad(lam) - np.deg2rad(l0)
+                t = np.tan(phi)
+                ni2 = ep2 * np.cos(phi)**2
+                n = a / np.sqrt(1-e2 * np.sin(phi)**2)
+                A0 = 1 - e2/4-3*e2**2/64-5*e2**3/256
+                A2 = 3/8*(e2+e2**2/4+15*e2**3/128)
+                A4 = 15/256*(e2**2 + 3*e2**3/4)
+                A6 = 35*e2**3/3072
+                sig = a*(A0 * phi - A2 * np.sin(2*phi) + A4 * np.sin(4*phi) - A6*np.sin(6*phi))
+                xgk = sig + (dl**2)/2 * n*np.sin(phi)*np.cos(phi)*(1 + (dl**2)/12 * np.cos(phi)**2 * (5 - t**2 +
+                                                                                                    9*ni2 + 4*ni2**2) + dl**4/360*np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2))
+                ygk = dl*n*np.cos(phi) * (1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2) +
+                                        (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
+                pas = 0
+                for _ in range(15):
+                    if round(lam/3, 0) == pas:
+                        nr = pas
+                    pas += 1
 
+                x20 = xgk * m
+                y20 = ygk * m + nr*1000000 + 500000
+                print(nr)
+                return (x20, y20)
+            else:
+                print("Nie podano współrzędncyh geodezyjnych")
+       
+    
 if __name__ == "__main__":
     Transformations.dms(0.7876567)
     a = Transformations(phi=53.55170961, lam=15.73965028, h=337.369)
