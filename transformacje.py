@@ -1,9 +1,10 @@
 import numpy as np
+import argparse
 
 
 class Transformations:
 
-    def __init__(self, elipsoid_name):
+    def __init__(self, elipsoid_name: str):
         """
         nazwa elipsoidy musi być wybrana spośród: GRS80, WGS84, Krasowski
 
@@ -19,50 +20,55 @@ class Transformations:
             self.a = 6378245
             self.e2 = 0.00669342162296
 
+        assert self.elipsoid_name == "GRS80" or "WGS84" or "Krasowski",\
+            "The specified ellipsoid is not supported"
+
     @staticmethod
-    def dms(value: float) -> str:
+    def dms(value: float) -> tuple[float, float, float]:
         """
-    Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach
-    i zwraca ją jako string.
+    Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach,
+    wyświetla ją w postaci deg°min'sec" i zwraca ją jako krotkę (deg, min, sec)
 
         """
 
-        znak = ' '
         if value < 0:
-            znak = "-"
-            value = abs(value)
-        value = value * 180/np.pi
-        degrees = int(value)
-        minutes = int((value - degrees) * 60)
-        seconds = (value-degrees-minutes/60)*3600
+            symbol = "-"
+        else:
+            symbol = ' '
+        value_deg = abs(value) * 180/np.pi
+        degrees = int(value_deg)
+        minutes = int((value_deg - degrees) * 60)
+        seconds = (value_deg-degrees-minutes/60)*3600
         d_sign = "\N{DEGREE SIGN}"
-        return f"{znak}{degrees:3d}{d_sign}{minutes:2d}'{seconds:7.5f}\""
+        print(f"{symbol}{degrees:3d}{d_sign}{minutes:2d}'{seconds:7.5f}\"")
+        return (degrees, minutes, round(seconds, 5))
 
     def xyz_kras_2_xyz_grs80(self, phi_k, lam_k, h_k):
-        if self.elipsoid_name == "Krasowski":
-            xk, yk, zk = self.flh2XYZ(
-                phi_k, lam_k, h_k)
 
-            Tx = -33.4297
-            Ty = 146.5746
-            Tz = 76.2865
+        assert self.elipsoid_name == "Krasowski",\
+            "You didn't select the Krasowski ellipsoid"
 
-            d11 = 1 - 0.84078048E-6
-            d12 = - 4.08959962E-6
-            d13 = -0.25614575E-6
-            d21 = +4.08960007E-6
-            d22 = 1 - 0.84078196E-6
-            d23 = +1.73888389E-6
-            d31 = +0.25613864E-6
-            d32 = -1.73888494E-6
-            d33 = 1 - 0.84077363E-6
+        xk, yk, zk = self.flh2XYZ(
+            phi_k, lam_k, h_k)
 
-            x = d11 * (xk - Tx) + d12 * (yk - Ty) + d13 * (zk - Tz)
-            y = d21 * (xk - Tx) + d22 * (yk - Ty) + d23 * (zk - Tz)
-            z = d31 * (xk - Tx) + d32 * (yk - Ty) + d33 * (zk - Tz)
-            return (x, y, z)
-        else:
-            print("Nie wybrano elipsoidy Krasowskiego")
+        Tx = -33.4297
+        Ty = 146.5746
+        Tz = 76.2865
+
+        d11 = 1 - 0.84078048E-6
+        d12 = - 4.08959962E-6
+        d13 = -0.25614575E-6
+        d21 = +4.08960007E-6
+        d22 = 1 - 0.84078196E-6
+        d23 = +1.73888389E-6
+        d31 = +0.25613864E-6
+        d32 = -1.73888494E-6
+        d33 = 1 - 0.84077363E-6
+
+        x = d11 * (xk - Tx) + d12 * (yk - Ty) + d13 * (zk - Tz)
+        y = d21 * (xk - Tx) + d22 * (yk - Ty) + d23 * (zk - Tz)
+        z = d31 * (xk - Tx) + d32 * (yk - Ty) + d33 * (zk - Tz)
+        return (x, y, z)
 
     def hirvonen(self, x, y, z) -> tuple[float, float, float]:
         """
@@ -115,13 +121,13 @@ współrzędnych topocentrycznych
         lam_odbiornika = self.hirvonen(
             x_odbiornika, y_odbiornika, z_odbiornika)[1]
         Rneu = np.array([[-np.sin(phi_odbiornika) * np.cos(lam_odbiornika),
-                          -np.sin(lam_odbiornika),
-                          np.cos(phi_odbiornika) * np.cos(lam_odbiornika)],
+                        -np.sin(lam_odbiornika),
+                        np.cos(phi_odbiornika) * np.cos(lam_odbiornika)],
                          [-np.sin(phi_odbiornika) * np.sin(lam_odbiornika),
-                             np.cos(lam_odbiornika),
-                             np.cos(phi_odbiornika) * np.sin(lam_odbiornika)],
+                        np.cos(lam_odbiornika),
+                        np.cos(phi_odbiornika) * np.sin(lam_odbiornika)],
                          [np.cos(phi_odbiornika), 0,
-                             np.sin(phi_odbiornika)]])
+                          np.sin(phi_odbiornika)]])
 
         X_sr = [x_odbiornika - x_satelity, y_odbiornika -
                 y_satelity, z_odbiornika - z_satelity]
@@ -136,8 +142,9 @@ współrzędnych topocentrycznych
         na współrzędne geocentryczne w układzie PL-2000.
         Istnieje możliwość wyboru elipsoidy,
         z której przeliczane będą współrzędne, w tym celu
-        należy podać jej nazwę ("WGS84", "GRS80" lub "Krasowski")
-        południk osiowy l0 należy podać w stopniach.
+        należy podać jej nazwę ("WGS84", "GRS80" lub "Krasowski").
+        Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
+        Południk osiowy l0 należy podać w stopniach.
         wynik w postaci: (X_2000,Y_2000)
 
 
@@ -146,6 +153,8 @@ współrzędnych topocentrycznych
         e2 = self.e2
         m = 0.999923
         if self.elipsoid_name == "Krasowski":
+            assert h_krasowski is not None, \
+                "You didn't specify the height for the Krasowski ellipsoid"
             x, y, z = self.xyz_kras_2_xyz_grs80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
@@ -169,15 +178,16 @@ współrzędnych topocentrycznych
         xgk = sig + (dl**2)/2 * n*np.sin(phi)*np.cos(phi)*(1 + (dl**2)/12 * np.cos(phi)**2 * (5 - t**2 +
                                                                                               9*ni2 + 4*ni2**2) + dl**4/360*np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2))
         ygk = dl*n*np.cos(phi) * (1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2) +
-                                      (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
-        pas = 0
-        for _ in range(15):
+                                  (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
+        pas = nr = 0
+        for _ in range(30):
             if round(np.rad2deg(lam)/3, 0) == pas:
                 nr = pas
+                break
             pas += 1
 
         x20 = xgk * m
-        y20 = ygk * m + nr*1000000 + 500000
+        y20 = ygk * m + nr * 1e6 + 5e6
         return (x20, y20)
 
     def fl_2_1992(self, phi: float, lam: float,
@@ -195,8 +205,8 @@ współrzędnych topocentrycznych
         a = self.a
         e2 = self.e2
         if self.elipsoid_name == "Krasowski":
-            if h_krasowski is None:
-                return "Nie podałeś wysokości"
+            assert h_krasowski is not None,\
+                "You didn't specify the height for the Krasowski ellipsoid"
             x, y, z = self.xyz_kras_2_xyz_grs80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
@@ -221,16 +231,44 @@ współrzędnych topocentrycznych
         xgk = sigma + (dl**2)/2 * N*np.sin(phi)*np.cos(phi)*(1 + (dl**2)/12 * np.cos(phi)**2 * (5 - t**2 +
                                                                                                 9*ni2 + 4*ni2**2) + dl**4/360*np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2))
         ygk = dl*N*np.cos(phi) * (1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2) +
-                                      (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
+                                  (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
         x92 = xgk * m92 - 5300000
         y92 = ygk * m92 + 500000
         return (x92, y92)
 
 
+parser = argparse.ArgumentParser(
+    description="The program converts coordinates between coordinate systems")
+parser.add_argument("elipsoid", default="GRS80",
+                    choices=["WGS84", "GRS80", "Krasowski"],
+                    help="Enter elipsoid type")
+
+parser.add_argument("-92", "--fl_2_1992", nargs="*", type=float, help="""
+Program transforms coordinates from phi,
+lambda to x, y in 1992 coordinate. If elipsoid GRS80 or WGS84 is chosen
+enter phi, lam and prime meridian,
+    if you chose Krasowski elipsoid you need to add height at the end""")
+
+parser.add_argument("-20", "--fl_2_2000", nargs="*",
+                    type=float, help="""
+Program transforms coordinates from phi,
+lambda to x, y in 2000 coordinate. If elipsoid GRS80 or WGS84 is chosen
+enter phi, lam and prime meridian, 
+if you chose Krasowski elipsoid you need to add height at the end""")
+
+args = parser.parse_args()
+
+elipsoid = Transformations(args.elipsoid)
+
+if args.fl_2_1992:
+    print(elipsoid.fl_2_1992(*args.fl_2_1992))
+elif args.fl_2_2000:
+    print(elipsoid.fl_2_2000(*args.fl_2_2000))
+
 if __name__ == "__main__":
     trans1 = Transformations("Krasowski")
     x_20_k, y_20_k = trans1.fl_2_2000(
-        50 + 1.343186/3600, 16 + 6.268112/3600, 15, 300)
+        50 + 1.343186/3600, 16 + 6.268112/3600, 15, h_krasowski=259.5263)
     print('x_20_k, y_20_k: ', x_20_k, y_20_k)
     trans2 = Transformations("GRS80")
     x_20, y_20 = trans2.fl_2_2000(50, 16, 15)
