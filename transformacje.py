@@ -9,7 +9,10 @@ class Transformations:
         nazwa elipsoidy musi być wybrana spośród: GRS80, WGS84, Krasowski
 
         """
+
         self.elipsoid_name = elipsoid_name
+        assert self.elipsoid_name == "GRS80" or "WGS84" or "Krasowski",\
+            "The specified ellipsoid is not supported"
         if elipsoid_name == "GRS80":
             self.a = 6378137
             self.e2 = 0.00669438002290
@@ -20,9 +23,6 @@ class Transformations:
             self.a = 6378245
             self.e2 = 0.00669342162296
 
-        assert self.elipsoid_name == "GRS80" or "WGS84" or "Krasowski",\
-            "The specified ellipsoid is not supported"
-
     @staticmethod
     def dms(value: float) -> tuple[float, float, float]:
         """
@@ -30,7 +30,8 @@ class Transformations:
     wyświetla ją w postaci deg°min'sec" i zwraca ją jako krotkę (deg, min, sec)
 
         """
-
+        assert type(value) == float or int,\
+            "Can't convert value with type different than float or int"
         if value < 0:
             symbol = "-"
         else:
@@ -44,7 +45,12 @@ class Transformations:
         return (degrees, minutes, round(seconds, 5))
 
     def xyz_kras_2_xyz_grs80(self, phi_k: float, lam_k: float, h_k: float) -> tuple[float, float, float]:
-
+        """
+        Przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80.
+        By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy
+        jako Krasowski.
+        Zwraca wynik w postaci (x_grs80, y_grs80, z_grs80)
+        """
         assert self.elipsoid_name == "Krasowski",\
             "You didn't select the Krasowski ellipsoid"
 
@@ -66,13 +72,13 @@ class Transformations:
             'd33': 1 - 0.84077363E-6
         }
 
-        x = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
+        x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
             (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
-        y = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
+        y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
             (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
-        z = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
+        z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
             (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
-        return (x, y, z)
+        return (x_grs80, y_grs80, z_grs80)
 
     def hirvonen(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         """
@@ -94,7 +100,7 @@ class Transformations:
         lam = np.arctan2(y, x)
         return (phi, lam, h)
 
-    def flh2XYZ(self, phi: float, lam: float, h: float) -> tuple[float, float, float]:
+    def flh_2_xyz(self, phi: float, lam: float, h: float) -> tuple[float, float, float]:
         """
 
     Zamienia współrzędne geodezyjne φ, λ, h do współrzędnych
@@ -200,7 +206,7 @@ współrzędnych topocentrycznych
             pas += 1
 
         x20 = xgk * m
-        y20 = ygk * m + nr * 1e6 + 5e6
+        y20 = ygk * m + nr * 1e6 + 5e5
         return (x20, y20)
 
     def fl_2_1992(self, phi: float, lam: float,
@@ -239,22 +245,61 @@ współrzędnych topocentrycznych
         A2 = 3/8*(e2+e2**2/4+15*e2**3/128)
         A4 = 15/256*(e2**2 + 3*e2**3/4)
         A6 = 35*e2**3/3072
-        sigma = a*(A0 * phi - A2 * np.sin(2*phi) + A4 *
-                   np.sin(4*phi) - A6*np.sin(6*phi))
-        xgk_part_1 = (dl**2)/2 * N*np.sin(phi)*np.cos(phi)
-        xgk_part_2 = 1 + (dl**2)/12 * np.cos(phi)**2 * \
+        sig = a*(A0 * phi - A2 * np.sin(2*phi) + A4 *
+                 np.sin(4*phi) - A6*np.sin(6*phi))
+        xgk_part_1 = (dl**2)/2 * N * np.sin(phi) * np.cos(phi)
+        xgk_part_2 = (dl**2)/12 * np.cos(phi)**2 * \
             (5 - t**2 + 9*ni2 + 4*ni2**2)
         xgk_part_3 = dl**4/360 * \
             np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2)
-        xgk = sigma + xgk_part_1 * xgk_part_2 + xgk_part_3
-        ygk_part_1 = dl*N*np.cos(phi)
-        ygk_part_2 = 1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2)
-        ygk_part_3 = dl**4/120 * \
-            np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2)
-        ygk = ygk_part_1 * (ygk_part_2 + ygk_part_3)
+        xgk = sig + xgk_part_1 * (1 + xgk_part_2 + xgk_part_3)
+
+        ygk_part_1 = dl * N * np.cos(phi)
+        ygk_part_2 = (dl ** 2) / 6 * np.cos(phi) ** 2 * (1 - t ** 2 + ni2)
+        ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
+            (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
+        ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
         x92 = xgk * m92 - 5300000
         y92 = ygk * m92 + 500000
         return (x92, y92)
+
+
+def save_file_functions_to_file(args_function_title, file_title, function):
+    if args_function_title in ("hirvonen", "xyz_kras_2_xyz_grs80", "flh_2_xyz"):
+        input_nr = 3
+        return_nr = 3
+    elif args_function_title == "neu":
+        input_nr = 6
+        return_nr = 1
+    elif args_function_title in ("fl_2_1992", "fl_2_2000"):
+        if elipsoid.elipsoid_name == "Krasowski":
+            input_nr = 4
+            return_nr = 2
+        else:
+            input_nr = 3
+            return_nr = 2
+    else:
+        input_nr = 0
+        return_nr = 0
+    assert args_function_title is not None,\
+        "You didn't specify the name of functionction you want to use"
+    assert file_title is not None,\
+        """you didn't specify the name of the file from
+which you would like to transport the coordinates"""
+    results = []
+    with open(file_title, "r", encoding="UTF-8") as file:
+        data = []
+        for wiersz in file.readlines():
+            wsp = wiersz.replace("\n", "").replace(" ", "").split(";")
+            data.append(wsp)
+    for list in data:
+        params = [float(value) for value in list]
+        assert len(params) == input_nr,\
+            f"""You didn't provide enough parameters,
+you should enter {input_nr} values separated by a semicolon in each line of the file"""
+        results.append(function(*params))
+    with open("results.txt", "w") as file:
+        file.write('\n'.join('%s '*return_nr % x for x in results))
 
 
 if __name__ == "__main__":
@@ -262,15 +307,21 @@ if __name__ == "__main__":
         description="The program converts coordinates between coordinate systems")
     parser.add_argument("elipsoid", default="GRS80",
                         choices=["WGS84", "GRS80", "Krasowski"],
-                        help="Enter elipsoid type")
+                        help="Enter elipsoid type chose from WGS84, GRS80 or Krasowski")
+    parser.add_argument("--open_file", "-o", nargs="?", default=None, help="""
+    If you want to enter coordinates in file specify file tittle, else don't write anything,
+    because default value is None""")
 
-    parser.add_argument("-92", "--fl_2_1992", nargs="*", type=float, help="""
+    parser.add_argument("--file_functions", "-ff",
+                        choices=["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"])
+
+    parser.add_argument("--fl_2_1992", "-92", nargs="*", type=float, help="""
     Program transforms coordinates from phi,
     lambda to x, y in 1992 coordinate. If elipsoid GRS80 or WGS84 is chosen
     enter phi, lam and prime meridian,
-        if you chose Krasowski elipsoid you need to add height at the end""")
+    if you chose Krasowski elipsoid you need to add height at the end""")
 
-    parser.add_argument("-20", "--fl_2_2000", nargs="*",
+    parser.add_argument("--fl_2_20", "-20", nargs="*",
                         type=float, help="""
     Program transforms coordinates from phi,
     lambda to x, y in 2000 coordinate. If elipsoid GRS80 or WGS84 is chosen
@@ -278,18 +329,17 @@ if __name__ == "__main__":
     if you chose Krasowski elipsoid you need to add height at the end""")
 
     args = parser.parse_args()
-
     elipsoid = Transformations(args.elipsoid)
+    file_title = args.open_file
 
-    if args.fl_2_1992:
-        print(elipsoid.fl_2_1992(*args.fl_2_1992))
-    elif args.fl_2_2000:
-        print(elipsoid.fl_2_2000(*args.fl_2_2000))
+    if args.file_functions:
+        args_function_title = args.file_functions
 
-    trans1 = Transformations("Krasowski")
-    x_20_k, y_20_k = trans1.fl_2_2000(
-        50 + 1.343186/3600, 16 + 6.268112/3600, 15, h_krasowski=259.5263)
-    print('x_20_k, y_20_k: ', x_20_k, y_20_k)
-    trans2 = Transformations("GRS80")
-    x_20, y_20 = trans2.fl_2_2000(50, 16, 15)
-    print('x_20,y_20: ', x_20, y_20)
+    else:
+        args_function_title = None
+
+    dict = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"],
+                    [elipsoid.hirvonen, elipsoid.flh_2_xyz, elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000, elipsoid.xyz_kras_2_xyz_grs80]))
+
+    save_file_functions_to_file(
+        args_function_title, file_title, dict[args_function_title])
