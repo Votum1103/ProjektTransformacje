@@ -44,7 +44,8 @@ class Transformations:
         print(f"{symbol}{degrees:3d}{d_sign}{minutes:2d}'{seconds:7.5f}\"")
         return (degrees, minutes, round(seconds, 5))
 
-    def xyz_kras_2_xyz_grs80(self, phi_k: float, lam_k: float, h_k: float) -> tuple[float, float, float]:
+    def xyz_kras_2_xyz_grs80(self, phi_k: float,
+                             lam_k: float, h_k: float) -> tuple[float, float, float]:
         """
         Przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80.
         By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy
@@ -54,8 +55,7 @@ class Transformations:
         assert self.elipsoid_name == "Krasowski",\
             "You didn't select the Krasowski ellipsoid"
 
-        xk, yk, zk = self.flh2XYZ(
-            phi_k, lam_k, h_k)
+        xk, yk, zk = self.flh_2_xyz(phi_k, lam_k, h_k)
 
         params = {
             'Tx': -33.4297,
@@ -264,7 +264,13 @@ współrzędnych topocentrycznych
         return (x92, y92)
 
 
-def save_file_functions_to_file(args_function_title, file_title, function):
+def from_file_to_file(elipsoid, args_function_title: str, file_title: str, function):
+    """
+    Funkcja przelicza współrzędne podane w pliku wejściowym na współrzędne w wybranym przez
+    użytkownika układzie. W wyniku działania zwraca plik, który w
+    kolejnych wierszach ma zapisane wyniki transformacji dla danych w tym samym wierszu
+    w pliku wejściowym
+    """
     if args_function_title in ("hirvonen", "xyz_kras_2_xyz_grs80", "flh_2_xyz"):
         input_nr = 3
         return_nr = 3
@@ -302,18 +308,35 @@ you should enter {input_nr} values separated by a semicolon in each line of the 
         file.write('\n'.join('%s '*return_nr % x for x in results))
 
 
-if __name__ == "__main__":
+def argparse_data():
+    """
+    Funkcja ta pozwala na uruchomienie skryptu z wiersza poleceń. Można
+    przekonwertować wiele współrzędnych z pliku do innego układu współrzędnych,
+    ale także przeliczyć pojedynycze współrzędne wpisując ich wartość "z palca"
+    """
     parser = argparse.ArgumentParser(
         description="The program converts coordinates between coordinate systems")
     parser.add_argument("elipsoid", default="GRS80",
                         choices=["WGS84", "GRS80", "Krasowski"],
-                        help="Enter elipsoid type chose from WGS84, GRS80 or Krasowski")
-    parser.add_argument("--open_file", "-o", nargs="?", default=None, help="""
-    If you want to enter coordinates in file specify file tittle, else don't write anything,
-    because default value is None""")
+                        help="Enter elipsoid type. Chose from WGS84, GRS80 or Krasowski")
+    parser.add_argument("--open_file", "-o", nargs="?", default=None,
+                        help="If you want to enter coordinates in file specify file tittle")
 
     parser.add_argument("--file_functions", "-ff",
-                        choices=["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"])
+                        choices=["hirvonen", "flh_2_xyz", "neu",
+                                 "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"],
+                        help="""use it only with open_file to specify,
+    how do you want to transform coordinates giwen in file""")
+
+    parser.add_argument("--hirvonen", "-hirv", nargs="*", type=float, default=None, help="""
+    Program transforms coordinates from x,y,z to phi, lambda, height""")
+
+    parser.add_argument("--flh_2_xyz", "-fx", nargs="*", type=float, default=None, help="""
+    Program transforms coordinates from phi, lambda to xyz""")
+
+    parser.add_argument("--neu", "-n", nargs="*", type=float, default=None, help="""
+    Program transforms coordinates based on receiver coordinates (x,y,z)
+    and satellite's x,y,z  to neu (topocentric coordinates)""")
 
     parser.add_argument("--fl_2_1992", "-92", nargs="*", type=float, help="""
     Program transforms coordinates from phi,
@@ -321,25 +344,44 @@ if __name__ == "__main__":
     enter phi, lam and prime meridian,
     if you chose Krasowski elipsoid you need to add height at the end""")
 
-    parser.add_argument("--fl_2_20", "-20", nargs="*",
+    parser.add_argument("--fl_2_2000", "-20", nargs="*",
                         type=float, help="""
     Program transforms coordinates from phi,
     lambda to x, y in 2000 coordinate. If elipsoid GRS80 or WGS84 is chosen
     enter phi, lam and prime meridian,
     if you chose Krasowski elipsoid you need to add height at the end""")
 
+    parser.add_argument("--xyz_kras_2_xyz_grs80", "-kg", nargs="*",
+                        type=float, help=""" Program transforms coordinates
+    x,y,z from Krasowski elipsoid to x,y,z on GRS80 elipsoid.
+    Before chosing this method make sure you entered Krasowski as elipsoid name""")
     args = parser.parse_args()
     elipsoid = Transformations(args.elipsoid)
-    file_title = args.open_file
-
-    if args.file_functions:
+    if args.file_functions and args.open_file is not None:
+        file_title = args.open_file
         args_function_title = args.file_functions
+        names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
+                         "fl_2_2000", "xyz_kras_2_xyz_grs80"],
+                         [elipsoid.hirvonen, elipsoid.flh_2_xyz,
+                         elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
+                         elipsoid.xyz_kras_2_xyz_grs80]))
 
-    else:
-        args_function_title = None
+        from_file_to_file(elipsoid,
+                          args_function_title, file_title, names[args_function_title])
 
-    dict = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"],
-                    [elipsoid.hirvonen, elipsoid.flh_2_xyz, elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000, elipsoid.xyz_kras_2_xyz_grs80]))
+    if args.fl_2_1992:
+        print(elipsoid.fl_2_1992(*args.fl_2_1992))
+    if args.fl_2_2000:
+        print(elipsoid.fl_2_2000(*args.fl_2_2000))
+    if args.flh_2_xyz:
+        print(elipsoid.fl_2_1992(*args.fl_2_xyz))
+    if args.hirvonen:
+        print(elipsoid.fl_2_1992(*args.hirvonen))
+    if args.neu:
+        print(elipsoid.fl_2_1992(*args.neu))
+    if args.xyz_kras_2_xyz_grs80:
+        print(elipsoid.fl_2_1992(*args.xyz_kras_2_xyz_grs80))
 
-    save_file_functions_to_file(
-        args_function_title, file_title, dict[args_function_title])
+
+if __name__ == "__main__":
+    argparse_data()
