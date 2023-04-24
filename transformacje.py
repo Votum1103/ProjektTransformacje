@@ -43,7 +43,7 @@ class Transformations:
         print(f"{symbol}{degrees:3d}{d_sign}{minutes:2d}'{seconds:7.5f}\"")
         return (degrees, minutes, round(seconds, 5))
 
-    def xyz_kras_2_xyz_grs80(self, phi_k, lam_k, h_k):
+    def xyz_kras_2_xyz_grs80(self, phi_k: float, lam_k: float, h_k: float) -> tuple[float, float, float]:
 
         assert self.elipsoid_name == "Krasowski",\
             "You didn't select the Krasowski ellipsoid"
@@ -51,26 +51,30 @@ class Transformations:
         xk, yk, zk = self.flh2XYZ(
             phi_k, lam_k, h_k)
 
-        Tx = -33.4297
-        Ty = 146.5746
-        Tz = 76.2865
+        params = {
+            'Tx': -33.4297,
+            'Ty': 146.5746,
+            'Tz': 76.2865,
+            'd11': 1 - 0.84078048E-6,
+            'd12': - 4.08959962E-6,
+            'd13': -0.25614575E-6,
+            'd21': +4.08960007E-6,
+            'd22': 1 - 0.84078196E-6,
+            'd23': +1.73888389E-6,
+            'd31': +0.25613864E-6,
+            'd32': -1.73888494E-6,
+            'd33': 1 - 0.84077363E-6
+        }
 
-        d11 = 1 - 0.84078048E-6
-        d12 = - 4.08959962E-6
-        d13 = -0.25614575E-6
-        d21 = +4.08960007E-6
-        d22 = 1 - 0.84078196E-6
-        d23 = +1.73888389E-6
-        d31 = +0.25613864E-6
-        d32 = -1.73888494E-6
-        d33 = 1 - 0.84077363E-6
-
-        x = d11 * (xk - Tx) + d12 * (yk - Ty) + d13 * (zk - Tz)
-        y = d21 * (xk - Tx) + d22 * (yk - Ty) + d23 * (zk - Tz)
-        z = d31 * (xk - Tx) + d32 * (yk - Ty) + d33 * (zk - Tz)
+        x = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
+            (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
+        y = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
+            (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
+        z = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
+            (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
         return (x, y, z)
 
-    def hirvonen(self, x, y, z) -> tuple[float, float, float]:
+    def hirvonen(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         """
     Przelicza współrzędne prostokątne w układzie elipsoidy GRS
     do geodezyjnych φ, λ, h. Transformacja
@@ -90,7 +94,7 @@ class Transformations:
         lam = np.arctan2(y, x)
         return (phi, lam, h)
 
-    def flh2XYZ(self, phi, lam, h) -> tuple[float, float, float]:
+    def flh2XYZ(self, phi: float, lam: float, h: float) -> tuple[float, float, float]:
         """
 
     Zamienia współrzędne geodezyjne φ, λ, h do współrzędnych
@@ -175,10 +179,19 @@ współrzędnych topocentrycznych
         A6 = 35*e2**3/3072
         sig = a*(A0 * phi - A2 * np.sin(2*phi) + A4 *
                  np.sin(4*phi) - A6*np.sin(6*phi))
-        xgk = sig + (dl**2)/2 * n*np.sin(phi)*np.cos(phi)*(1 + (dl**2)/12 * np.cos(phi)**2 * (5 - t**2 +
-                                                                                              9*ni2 + 4*ni2**2) + dl**4/360*np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2))
-        ygk = dl*n*np.cos(phi) * (1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2) +
-                                  (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
+        xgk_part_1 = (dl**2)/2 * n * np.sin(phi) * np.cos(phi)
+        xgk_part_2 = (dl**2)/12 * np.cos(phi)**2 * \
+            (5 - t**2 + 9*ni2 + 4*ni2**2)
+        xgk_part_3 = dl**4/360 * \
+            np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2)
+        xgk = sig + xgk_part_1 * (1 + xgk_part_2 + xgk_part_3)
+
+        ygk_part_1 = dl * n * np.cos(phi)
+        ygk_part_2 = (dl ** 2) / 6 * np.cos(phi) ** 2 * (1 - t ** 2 + ni2)
+        ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
+            (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
+        ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
+
         pas = nr = 0
         for _ in range(30):
             if round(np.rad2deg(lam)/3, 0) == pas:
@@ -228,44 +241,51 @@ współrzędnych topocentrycznych
         A6 = 35*e2**3/3072
         sigma = a*(A0 * phi - A2 * np.sin(2*phi) + A4 *
                    np.sin(4*phi) - A6*np.sin(6*phi))
-        xgk = sigma + (dl**2)/2 * N*np.sin(phi)*np.cos(phi)*(1 + (dl**2)/12 * np.cos(phi)**2 * (5 - t**2 +
-                                                                                                9*ni2 + 4*ni2**2) + dl**4/360*np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2))
-        ygk = dl*N*np.cos(phi) * (1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2) +
-                                  (dl**4)/120*np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2))
+        xgk_part_1 = (dl**2)/2 * N*np.sin(phi)*np.cos(phi)
+        xgk_part_2 = 1 + (dl**2)/12 * np.cos(phi)**2 * \
+            (5 - t**2 + 9*ni2 + 4*ni2**2)
+        xgk_part_3 = dl**4/360 * \
+            np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2)
+        xgk = sigma + xgk_part_1 * xgk_part_2 + xgk_part_3
+        ygk_part_1 = dl*N*np.cos(phi)
+        ygk_part_2 = 1 + (dl**2)/6 * np.cos(phi)**2 * (1 - t**2 + ni2)
+        ygk_part_3 = dl**4/120 * \
+            np.cos(phi)**4 * (5 - 18*t**2 + t**4 + 14*ni2 - 58*ni2*t**2)
+        ygk = ygk_part_1 * (ygk_part_2 + ygk_part_3)
         x92 = xgk * m92 - 5300000
         y92 = ygk * m92 + 500000
         return (x92, y92)
 
 
-parser = argparse.ArgumentParser(
-    description="The program converts coordinates between coordinate systems")
-parser.add_argument("elipsoid", default="GRS80",
-                    choices=["WGS84", "GRS80", "Krasowski"],
-                    help="Enter elipsoid type")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="The program converts coordinates between coordinate systems")
+    parser.add_argument("elipsoid", default="GRS80",
+                        choices=["WGS84", "GRS80", "Krasowski"],
+                        help="Enter elipsoid type")
 
-parser.add_argument("-92", "--fl_2_1992", nargs="*", type=float, help="""
-Program transforms coordinates from phi,
-lambda to x, y in 1992 coordinate. If elipsoid GRS80 or WGS84 is chosen
-enter phi, lam and prime meridian,
+    parser.add_argument("-92", "--fl_2_1992", nargs="*", type=float, help="""
+    Program transforms coordinates from phi,
+    lambda to x, y in 1992 coordinate. If elipsoid GRS80 or WGS84 is chosen
+    enter phi, lam and prime meridian,
+        if you chose Krasowski elipsoid you need to add height at the end""")
+
+    parser.add_argument("-20", "--fl_2_2000", nargs="*",
+                        type=float, help="""
+    Program transforms coordinates from phi,
+    lambda to x, y in 2000 coordinate. If elipsoid GRS80 or WGS84 is chosen
+    enter phi, lam and prime meridian,
     if you chose Krasowski elipsoid you need to add height at the end""")
 
-parser.add_argument("-20", "--fl_2_2000", nargs="*",
-                    type=float, help="""
-Program transforms coordinates from phi,
-lambda to x, y in 2000 coordinate. If elipsoid GRS80 or WGS84 is chosen
-enter phi, lam and prime meridian, 
-if you chose Krasowski elipsoid you need to add height at the end""")
+    args = parser.parse_args()
 
-args = parser.parse_args()
+    elipsoid = Transformations(args.elipsoid)
 
-elipsoid = Transformations(args.elipsoid)
+    if args.fl_2_1992:
+        print(elipsoid.fl_2_1992(*args.fl_2_1992))
+    elif args.fl_2_2000:
+        print(elipsoid.fl_2_2000(*args.fl_2_2000))
 
-if args.fl_2_1992:
-    print(elipsoid.fl_2_1992(*args.fl_2_1992))
-elif args.fl_2_2000:
-    print(elipsoid.fl_2_2000(*args.fl_2_2000))
-
-if __name__ == "__main__":
     trans1 = Transformations("Krasowski")
     x_20_k, y_20_k = trans1.fl_2_2000(
         50 + 1.343186/3600, 16 + 6.268112/3600, 15, h_krasowski=259.5263)
