@@ -124,7 +124,7 @@ class Transformations:
             y_satelity: float, z_satelity: float) -> float:
         """
 Transformuje współrzędne geocentryczne odbiornika do
-współrzędnych topocentrycznych
+współrzędnych topocentrycznych n, e, u
         """
         phi_odbiornika = self.hirvonen(
             x_odbiornika, y_odbiornika, z_odbiornika)[0]
@@ -375,13 +375,13 @@ def argparse_data():
     if args.fl_2_2000:
         print(elipsoid.fl_2_2000(*args.fl_2_2000))
     if args.flh_2_xyz:
-        print(elipsoid.fl_2_1992(*args.fl_2_xyz))
+        print(elipsoid.flh_2_xyz(*args.flh_2_xyz))
     if args.hirvonen:
-        print(elipsoid.fl_2_1992(*args.hirvonen))
+        print(elipsoid.hirvonen(*args.hirvonen))
     if args.neu:
-        print(elipsoid.fl_2_1992(*args.neu))
+        print(elipsoid.neu(*args.neu))
     if args.xyz_kras_2_xyz_grs80:
-        print(elipsoid.fl_2_1992(*args.xyz_kras_2_xyz_grs80))
+        print(elipsoid.xyz_kras_2_xyz_grs80(*args.xyz_kras_2_xyz_grs80))
 
 
 if __name__ == "__main__":
