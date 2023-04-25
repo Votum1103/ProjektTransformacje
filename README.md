@@ -6,27 +6,13 @@ Została w nim zaimplementowana klasa Transformations w której znajdują się p
 ```mermaid
 graph LR
 A[x,y,z] -->|hirvonen| B[φ,λ,h]
+C[φ,λ,h] -->|flh_2_xyz| D[x,y,z]
+E[φ,λ] -->|fl_2_2000| F[x,y PL2000]
+G[φ,λ] -->|fl_2_1992| H[x,y PL1992]
+I[x,y,z Krasowski] -->|xyz_kras_2_xyz_grs80| J[x,y,z GRS80]
+K[x,y,z odbiornika x,y,z staelity] -->|neu| L[x,y,z GRS80]
 ```
-```mermaid
-graph LR
-A[φ,λ,h] -->|flh_2_xyz| B[x,y,z]
-```
-```mermaid
-graph LR
-A[φ,λ] -->|fl_2_2000| B[x,y PL2000]
-```
-```mermaid
-graph LR
-A[φ,λ] -->|fl_2_1992| B[x,y PL1992]
-```
-```mermaid
-graph LR
-A[x,y,z Krasowski] -->|xyz_kras_2_xyz_grs80| B[x,y,z GRS80]
-```
-```mermaid
-graph LR
-A[x,y,z odbiornika x,y,z staelity] -->|neu| B[x,y,z GRS80]
-```
+
 # Wywołanie
 Program umożliwia konwertowanie współrzędnych z następujących elipsoidach: **GRS80, WGS84, Krasowskiego**.
 
