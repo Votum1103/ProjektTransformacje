@@ -306,7 +306,7 @@ which you would like to transport the coordinates"""
 you should enter {input_nr} values separated by a semicolon in each line of the file"""
         results.append(function(*params))
     with open("results.txt", "w") as file:
-        file.write('\n'.join('%s '*return_nr % x for x in results))
+        file.write('\n'.join('%s; '*return_nr % x for x in results))
 
 
 def argparse_data():
