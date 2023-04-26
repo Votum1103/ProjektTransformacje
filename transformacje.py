@@ -24,6 +24,20 @@ class Transformations:
             self.e2 = 0.00669342162296
 
     @staticmethod
+    def degres_2_dms(deegres: float) -> str:  
+        """
+    Funkcja ta zmienia wartość kątów ze stopni dziesiętnych na wartość w stopniach minutach i sekundach,
+    i zwraca ją jako krotkę (deg, min, sec)
+        """
+        assert type(deegres) == float or int,\
+            "Can't convert value with type different than float or int"
+        deg = round(deegres,0)
+        mnt = int(np.trunc(deg))
+        sec = ((deegres - deg)*60-mnt)*60
+        d_sign = "\N{DEGREE SIGN}"
+        return f'{deg}{d_sign}{mnt}\'{sec:7.5f}\"'
+    
+    @staticmethod
     def dms(value: float) -> str:
         """
     Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach,
@@ -368,6 +382,10 @@ def argparse_data():
                           to degrees, minutes and seconds""")
     args = parser.parse_args()
     elipsoid = Transformations(args.elipsoid)
+    if args.file_functions:
+        assert args.open_file and args.elipsoid,\
+        "Aby uruchomić flage -ff musisz podać plik, z którego chcesz czytać"
+
     if args.file_functions and args.open_file is not None:
         file_title = args.open_file
         args_function_title = args.file_functions
@@ -377,6 +395,7 @@ def argparse_data():
                          elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
                          elipsoid.xyz_kras_2_xyz_grs80, Transformations.dms]))
 
+    
         from_file_to_file(elipsoid,
                           args_function_title, file_title, names[args_function_title])
 
