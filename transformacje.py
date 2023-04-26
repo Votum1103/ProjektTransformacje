@@ -293,11 +293,10 @@ which you would like to transport the coordinates"""
         data = []
         for wiersz in file.readlines():
             wsp = wiersz[:-1].replace("\n", "").replace(" ", "").split(";")
+            for element in wsp:
+                if element == "":
+                    wsp.remove(element)
             data.append(wsp)
-            for lists in data:
-                for element in lists:
-                    if element == "":
-                        lists.remove(element)
     if args_function_title == "dms":
         for list in data:
             results.append([Transformations.dms(float(value))
