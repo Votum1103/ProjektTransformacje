@@ -24,25 +24,20 @@ class Transformations:
             self.e2 = 0.00669342162296
 
     @staticmethod
-    def dms(value: float) -> tuple[float, float, float]:
+    def dms(value: float) -> str:
         """
     Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach,
-    wyświetla ją w postaci deg°min'sec" i zwraca ją jako krotkę (deg, min, sec)
+    i zwraca ją jako krotkę (deg, min, sec)
 
         """
         assert type(value) == float or int,\
             "Can't convert value with type different than float or int"
-        if value < 0:
-            symbol = "-"
-        else:
-            symbol = ' '
-        value_deg = abs(value) * 180/np.pi
-        degrees = int(value_deg)
-        minutes = int((value_deg - degrees) * 60)
-        seconds = (value_deg-degrees-minutes/60)*3600
+        dd = value * 180/np.pi
+        deg = int(np.trunc(dd))  # ucina część ułamkową
+        mnt = int(np.trunc((dd - deg)*60))
+        sec = ((dd - deg)*60-mnt)*60
         d_sign = "\N{DEGREE SIGN}"
-        print(f"{symbol}{degrees:3d}{d_sign}{minutes:2d}'{seconds:7.5f}\"")
-        return (degrees, minutes, round(seconds, 5))
+        return f'{deg}{d_sign}{mnt}\'{sec:7.5f}\"'
 
     def xyz_kras_2_xyz_grs80(self, phi_k: float,
                              lam_k: float, h_k: float) -> tuple[float, float, float]:
@@ -290,23 +285,36 @@ which you would like to transport the coordinates"""
             input_nr = 3
             return_nr = 2
     else:
-        input_nr = 0
-        return_nr = 0
+        input_nr = 1
+        return_nr = 1
 
     results = []
     with open(file_title, "r", encoding="UTF-8") as file:
         data = []
         for wiersz in file.readlines():
-            wsp = wiersz.replace("\n", "").replace(" ", "").split(";")
+            wsp = wiersz[:-1].replace("\n", "").replace(" ", "").split(";")
             data.append(wsp)
-    for list in data:
-        params = [float(value) for value in list]
-        assert len(params) == input_nr,\
-            f"""You didn't provide enough parameters,
-you should enter {input_nr} values separated by a semicolon in each line of the file"""
-        results.append(function(*params))
-    with open("results.txt", "w") as file:
-        file.write('\n'.join('%s; '*return_nr % x for x in results))
+            for lists in data:
+                for element in lists:
+                    if element == "":
+                        lists.remove(element)
+    if args_function_title == "dms":
+        for list in data:
+            results.append([Transformations.dms(float(value))
+                           for value in list])
+        with open("results.txt", "w") as file:
+            for lists in results:
+                file.write(''.join('%s;'*return_nr % x for x in lists))
+                file.write('\n')
+    else:
+        for list in data:
+            params = [float(value) for value in list]
+            assert len(params) == input_nr,\
+                f"""You didn't provide enough parameters,
+    you should enter {input_nr} values separated by a semicolon in each line of the file"""
+            results.append(function(*params))
+        with open("results.txt", "w") as file:
+            file.write('\n'.join('%s;'*return_nr % x for x in results))
 
 
 def argparse_data():
@@ -325,7 +333,7 @@ def argparse_data():
 
     parser.add_argument("--file_functions", "-ff",
                         choices=["hirvonen", "flh_2_xyz", "neu",
-                                 "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80"],
+                                 "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80", "dms"],
                         help="""use it only with open_file to specify,
     how do you want to transform coordinates giwen in file""")
 
@@ -356,16 +364,19 @@ def argparse_data():
                         type=float, help=""" Program transforms coordinates
     x,y,z from Krasowski elipsoid to x,y,z on GRS80 elipsoid.
     Before chosing this method make sure you entered Krasowski as elipsoid name""")
+    parser.add_argument("--dms", "-d",
+                        type=float, help=""" Program converts value from radians
+                          to degrees, minutes and seconds""")
     args = parser.parse_args()
     elipsoid = Transformations(args.elipsoid)
     if args.file_functions and args.open_file is not None:
         file_title = args.open_file
         args_function_title = args.file_functions
         names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
-                         "fl_2_2000", "xyz_kras_2_xyz_grs80"],
+                         "fl_2_2000", "xyz_kras_2_xyz_grs80", "dms"],
                          [elipsoid.hirvonen, elipsoid.flh_2_xyz,
                          elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
-                         elipsoid.xyz_kras_2_xyz_grs80]))
+                         elipsoid.xyz_kras_2_xyz_grs80, Transformations.dms]))
 
         from_file_to_file(elipsoid,
                           args_function_title, file_title, names[args_function_title])
@@ -382,6 +393,8 @@ def argparse_data():
         print(elipsoid.neu(*args.neu))
     if args.xyz_kras_2_xyz_grs80:
         print(elipsoid.xyz_kras_2_xyz_grs80(*args.xyz_kras_2_xyz_grs80))
+    if args.dms:
+        print(Transformations.dms(args.dms))
 
 
 if __name__ == "__main__":
