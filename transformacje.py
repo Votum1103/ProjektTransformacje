@@ -274,11 +274,6 @@ def from_file_to_file(elipsoid, args_function_title: str,
     kolejnych wierszach ma zapisane wyniki transformacji dla danych w tym samym wierszu
     w pliku wejściowym
     """
-    assert args_function_title is not None,\
-        "You didn't specify the name of functionction you want to use"
-    assert file_title is not None,\
-        """you didn't specify the name of the file from
-which you would like to transport the coordinates"""
     if args_function_title in ("hirvonen", "flh_k_xyz_80", "flh_2_xyz"):
         input_nr = 3
         return_nr = 3
