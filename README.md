@@ -1,20 +1,24 @@
 # ProjektTransformacje
-## Do czego służy
-Projekt ten został stworzony do transforamcji współrzędnych pomiędzy układami. 
+## Opis
+Projekt ten został stworzony do transformacji współrzędnych pomiędzy układami. 
 Została w nim zaimplementowana klasa Transformations w której znajdują się poszczególne metody transformujące podane współrzędne do wskazanego przez użytkownika układu.
+Program umożliwia konwertowanie współrzędnych z następujących elipsoid: **GRS80, WGS84, Krasowskiego**.
 
 <span style="color:red">Ważne!</span>
 
-Wszystkie wartości kątowe wpisywane jako argumenty funkcji muszą by podane w stopniach dziesiętnych (z częścią ułamkową po kropce)
+**Wszystkie wartości kątowe wpisywane jako argumenty funkcji muszą by podane w stopniach dziesiętnych (z częścią ułamkową po kropce)**
+
 # Metody
 ```mermaid
 graph LR
-A[x,y,z] -->|hirvonen| B[φ,λ,h]
-C[φ,λ,h] -->|flh_2_xyz| D[x,y,z]
-E[φ,λ] -->|fl_2_2000| F[x,y PL2000]
-G[φ,λ] -->|fl_2_1992| H[x,y PL1992]
-I[phi,lam,h Krasowski] -->|flh_k_xyz_80| J[x,y,z GRS80]
-K[x,y,z odbiornika x,y,z staelity] -->|neu| L[x,y,z GRS80]
+A[degrees] -->|degrees_2_dms| B[dms]
+C[radians] -->|radians_2_dms| D[dms]
+E[φ,λ,h Krasowski] -->|flh_k_xyz_80| F[x,y,z GRS80]
+G[x,y,z] -->|hirvonen| H[φ,λ,h]
+I[φ,λ,h] -->|flh_2_xyz| J[x,y,z]
+K[x,y,z odbiornika x,y,z staelity] -->|neu| L[n,e,u]
+M[φ,λ] -->|fl_2_2000| N[x,y PL2000]
+O[φ,λ] -->|fl_2_1992| P[x,y PL1992]
 ```
 # Opis funcji oraz ich wywołania z użyciem argparse
 
@@ -26,7 +30,7 @@ Funkcja zamienia wartość w stopniach na wartość w stopniach, minutach i seku
 |---	|---	|
 | liczba <br>argumentów 	| 1 	|
 | argumenty 	| degrees 	|
-| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff degrees_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie wpisana funkcja<br> zamieni wszystkie wartości w pliku 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff degrees_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie dodana funkcja<br> zamieni wszystkie wartości w pliku 	|
 | wywołanie w cmd 	| \<elipsoida\> -dd  \<kąt w stopniach\> 	|
 
 
@@ -55,7 +59,7 @@ Funkcja zamienia wartość w radianach na wartość w stopniach, minutach i seku
 |---	|---	|
 | liczba <br>argumentów 	| 1 	|
 | argumenty 	| radians 	|
-| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff radians_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie wpisana funkcja<br> zamieni wszystkie wartości w pliku 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff radians_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie dodana funkcja<br> zamieni wszystkie wartości w pliku 	|
 | wywołanie w cmd 	| \<elipsoida\> -rd  \<kąt w radianach\> 	|
 
 <br>
@@ -201,7 +205,7 @@ Program zwróci x20, y20 w konsoli w postaci:
 ```bash
 (5540899.663987989, 5571689.605030992)
 ```
-- <span style="color:green">**fl_2_2000**</span>
+- <span style="color:green">**fl_2_1992**</span>
 
 Funkcja przelicza współrzędne geodezyjne φ, λ
 na współrzędne geocentryczne w układzie PL-1992.
@@ -230,46 +234,44 @@ Program zwróci x92, y92 w konsoli w postaci:
 (636809.3247729586, 284095.1148406571)
 ```
 
-# Wywołanie
-Program umożliwia konwertowanie współrzędnych z następujących elipsoidach: **GRS80, WGS84, Krasowskiego**.
-
-Program umożliwia konwertowanie dużej ilości współrzędncyh z pliku, ale także pojedynczych wpisywanych "z palca"
-
-Podstawowe wywołanie dla współrzędncyh z pliku :
-```bash
-python transformacje.py {nazwa elipsoidy} {plik z danymi} {funkcja}
-```
-**Przykład:**
-```bash
-python transformacje.py GRS80 dane.txt hirvonen
-```
-Podstawowe wywołanie dla współrzędncyh "z palca" :
-```bash
-python transformacje.py {nazwa elipsoidy} {flaga funkcji} {współrzędne oddzielone spacjami} 
-```
-
-**Przykład:**
-```bash
-python transformacje.py GRS80 --flh_2_xyz 51 21 100
-```
-
-
-<span style="color:red">Ważne!</span>
-
-
-współrzędne w metodzie "z palca" muszą być zapisane w stopniach dziesiętnych (z częścią dziesiętną po przecinku)
-
 # Wygląd pliku z danymi 
 
 <span style="color:red">Ważne!</span>
 
-W kolejnych linijkach w pliku wejściowym należy wpisać współrzędne oddzielone średnikami. 
+**W kolejnych linijkach w pliku wejściowym należy wpisać współrzędne oddzielone średnikami.**
 
-Przykładowy wygląd pliku dla przeliczenia φ,λ,h do x,y,z. 
+- Przykładowy wygląd pliku dla przeliczenia φ,λ,h do x,y,z dla elipsoidy GRS80. Dane w każdej linijce pliku muszą byc wpisane w postaci: φ;λ;h
 
-<img title="a title" alt="Alt text" width = 300 src="data.png">
+```bash
+52.45678987654; 13.457898765; 324.987;
+45.978987567; 12.078987789; 302.78783;
+59.87678326; 10.0987877; 290.87654342;
+43.90; 21.9878765; 288.98765;
+```
+Plik results.txt, który powstaje w wyniku przeliczenia powyższych wartości na x,y,z: 
 
-Dane w każdej linijce pliku muszą byc wpisane w postaci: φ;λ;h
+```bash
+3788029.81191433;906482.1186637862;5034193.738700127;
+4341904.223809285;929158.2440457781;4563842.549821416;
+3159412.309512206;562708.0780869896;5493852.084013798;
+4268559.280520176;1723559.3431196345;4400292.58979039;
+```
+- Przykładowy wygląd pliku dla przeliczenia wartości w stopniach na wartości w stopniach, minutach i sekundach
+
+```bash
+52.45678987654; 13.457898765; 324.987;
+45.978987567; 12.078987789; 302.78783;
+59.87678326; 10.0987877; 290.87654342;
+43.90; 21.9878765; 288.98765;
+```
+Poniższe przeliczenie będzie wykonane tylko dla kolumny pierwszej.
+
+```bash
+52°27'24.44356";13.457898765;324.987;
+45°58'44.35524";12.078987789;302.78783;
+59°52'36.41974";10.0987877;290.87654342;
+43°53'60.00000";21.9878765;288.98765;
+```
 
 # Wymagania
 
