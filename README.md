@@ -174,11 +174,11 @@ Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
 x_odb, y_odb, z_odb, x_sat, y_sat, z_sat utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne n; e; u
 
 ```bash
-python transformacje.py GRS80 -n 
+python transformacje.py GRS80 -n 3685825.7022625906 1378073.761327304 5002882.146444101 9785596.195556305 14216408.132039897 20399414.041585404 
 ```
 Program zwróci n,e,u w konsoli w postaci:
 ```bash
-()
+(1433804.6566615142, 9889126.110578151, 18418268.45441226)
 ```
 - <span style="color:green">**fl_2_2000**</span>
 
@@ -240,7 +240,7 @@ Program zwróci x92, y92 w konsoli w postaci:
 
 **W kolejnych linijkach w pliku wejściowym należy wpisać współrzędne oddzielone średnikami.**
 
-- Przykładowy wygląd pliku dla przeliczenia φ,λ,h do x,y,z dla elipsoidy GRS80. Dane w każdej linijce pliku muszą byc wpisane w postaci: φ;λ;h
+- Przykładowy wygląd pliku dla przeliczenia φ,λ,h do x,y,z dla elipsoidy GRS80 (flh_2_xyz). Dane w każdej linijce pliku muszą byc wpisane w postaci: φ;λ;h
 
 ```bash
 52.45678987654; 13.457898765; 324.987;
@@ -256,7 +256,7 @@ Plik results.txt, który powstaje w wyniku przeliczenia powyższych wartości na
 3159412.309512206;562708.0780869896;5493852.084013798;
 4268559.280520176;1723559.3431196345;4400292.58979039;
 ```
-- Przykładowy wygląd pliku dla przeliczenia wartości w stopniach na wartości w stopniach, minutach i sekundach
+- Przykładowy wygląd pliku dla przeliczenia wartości w stopniach na wartości w stopniach, minutach i sekundach (degrees_2_dms):
 
 ```bash
 52.45678987654; 13.457898765; 324.987;
@@ -264,7 +264,7 @@ Plik results.txt, który powstaje w wyniku przeliczenia powyższych wartości na
 59.87678326; 10.0987877; 290.87654342;
 43.90; 21.9878765; 288.98765;
 ```
-Poniższe przeliczenie będzie wykonane tylko dla kolumny pierwszej.
+Poniższe przeliczenie zostało wykonane tylko dla kolumny pierwszej:
 
 ```bash
 52°27'24.44356";13.457898765;324.987;
