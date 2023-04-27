@@ -1,0 +1,105 @@
+% !TEX encoding = utf-8
+\documentclass[12pt, a4paper]{article}
+\usepackage[polish]{babel} 
+\usepackage[utf8x]{inputenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath, amsfonts}
+\usepackage[T1]{fontenc}
+\usepackage{polski}
+\usepackage{multicol}
+\usepackage{tgtermes}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage[margin=2cm]{geometry}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{verbatimbox}
+\usepackage{hyperref}
+
+\begin{document}
+
+\begin{table}[!htb]
+\centering
+\begin{tabular}{|p{8cm}|p{7cm}|} \hline
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ Politechnika Warszawska}\\
+			\multicolumn{2}{|l|}{Wydział Geodezji i Kartografii}\\  
+			\multicolumn{2}{|l|}{Zakład Geodezji i Astronomii Geodezyjnej}\\  
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{\textbf{Przedmiot: Informatyka Geodezyjna II }}\\ 
+			\multicolumn{2}{|l|}{ } \\ \hline 
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{\LARGE{\textbf{Ćwiczenie nr 1}}}\\ 
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{\Large{Stworzenie programu transformującego współrzędne pomiędzy układami}}\\  
+			\multicolumn{2}{|l|}{\Large}\\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{\small{Oświadczam, że niniejsza praca stanowiąca podstawę do uznania osiągnięcia efektów uczenia się z}} \\
+			\multicolumn{2}{|l|}{\small{przedmiotu \textbf{Informatyka Geodezyjna II} została wykonana przeze mnie samodzielnie}} \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\
+			\multicolumn{2}{|l|}{ } \\ \hline
+			\ & \ \\
+			\ & \ \\
+			\textbf{Sebastian Hetel, Julia Białas} & Data wydania ćwiczenia: 03-04-2023 \\
+			\ & \ \\
+			\textbf{Numer indeksu: 319320, 319293}& Data oddania ćwiczenia: 28-04-2023 \\
+			\ & \ \\
+			Grupa: 1 & Zajęcia: poniedziałek 12:15-14:00 \\
+			Semestr: 4 & \\
+			Rok akademicki: 2022/2023 &  Prowadzący: mgr inż. Andrzej Szeszko \\
+			\ & \ \\ \hline
+			
+			
+\end{tabular}
+		
+\end{table}
+	
+\newpage
+\section{Cel ćwiczenia}
+Celem ćwiczenia było utworzenie programu, w języku Python, który będzie przeliczał współrzędne pomiędzy różnymi układami i elipsoiami. Celem było również umożliwienie odczytu wielu współrzędnych z podanego pliku i zapisane do nowego. Ważne również było zaimplementowanie możliwoście uruchomienia kodu za pomocą wiersza poleceń przy pomocy biblioteki Argparse.  
+\subsection{Wykorzystane narzędzia}
+Do wykonania programu zostały urządzenia z różnymi systemami operacyjnymi
+\begin{itemize}
+\item Windows 10
+\item MacOS
+\end{itemize} 
+Programami, które były wykorzystane do utworzenia skryptu oraz testwania go były:
+\begin{itemize}
+\item Visual Studio Code
+\item NotePad ++
+\item Notatnik
+\end{itemize} 
+\section{Przebieg ćwiczenia}
+Na początku stworzyliśmy klase Transformations, w której zaczęliśmy tworzyć metody które pozwalają na transforamcje współrzędnych pomiędzy pomiędzy układami.\\
+Pierwszą stworzoną metodą była metoda hirvonen, którą napisaliśmy na podstawie 
+\url{http://www.asgeupos.pl/index.php?wpg_type=tech_transf&sub=xyz_blh}\\
+Następnie stworzyliśmy funkcję odwrotną do hirvonena czyli flh2xyz, również na podstawie na podstawie 
+\url{http://www.asgeupos.pl/index.php?wpg_type=tech_transf&sub=xyz_blh}\\
+Kolejnym krokiem było zaimplementowanie metody neu, pozwalającej na przeliczenie współrzędnych geocentrycznych na współrzędne topocentryczne.
+
+
+
+\end{document}
