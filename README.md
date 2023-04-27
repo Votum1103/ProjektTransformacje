@@ -2,6 +2,10 @@
 ## Do czego służy
 Projekt ten został stworzony do transforamcji współrzędnych pomiędzy układami. 
 Została w nim zaimplementowana klasa Transformations w której znajdują się poszczególne metody transformujące podane współrzędne do wskazanego przez użytkownika układu.
+
+<span style="color:red">Ważne!</span>
+
+Wszystkie wartości kątowe wpisywane jako argumenty funkcji muszą by podane w stopniach dziesiętnych (z częścią ułamkową po kropce)
 # Metody
 ```mermaid
 graph LR
@@ -9,8 +13,221 @@ A[x,y,z] -->|hirvonen| B[φ,λ,h]
 C[φ,λ,h] -->|flh_2_xyz| D[x,y,z]
 E[φ,λ] -->|fl_2_2000| F[x,y PL2000]
 G[φ,λ] -->|fl_2_1992| H[x,y PL1992]
-I[x,y,z Krasowski] -->|xyz_kras_2_xyz_grs80| J[x,y,z GRS80]
+I[phi,lam,h Krasowski] -->|flh_k_xyz_80| J[x,y,z GRS80]
 K[x,y,z odbiornika x,y,z staelity] -->|neu| L[x,y,z GRS80]
+```
+# Opis funcji oraz ich wywołania z użyciem argparse
+
+- <span style="color:green">**degrees_2_dms**</span>
+
+Funkcja zamienia wartość w stopniach na wartość w stopniach, minutach i sekundach i zwraca ją jako str: deg°min'sec"
+
+| Funkcja 	| degrees_2_dms 	|
+|---	|---	|
+| liczba <br>argumentów 	| 1 	|
+| argumenty 	| degrees 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff degrees_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie wpisana funkcja<br> zamieni wszystkie wartości w pliku 	|
+| wywołanie w cmd 	| \<elipsoida\> -dd  \<kąt w stopniach\> 	|
+
+
+<br>
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff degrees_2_dms
+```
+Program na podstawie danych z podanego pliku (dane.txt)
+utworzy plik results.txt, w którym w każdym wierszu będą oddzielone
+od siebie średnikiem kąty w postaci deg°min'sec" (tak jak w pliku wejściowym)
+
+```bash
+python transformacje.py GRS80 -dd 50.4565676
+```
+Program zamieni podaną wartośc i zwróci w konsoli w postaci:
+```bash
+50°27'23.64336"
+```
+- <span style="color:green">**radians_2_dms**</span>
+
+Funkcja zamienia wartość w radianach na wartość w stopniach, minutach i sekundach i zwraca ją jako str: deg°min'sec"
+
+| Funkcja 	| radians_2_dms 	|
+|---	|---	|
+| liczba <br>argumentów 	| 1 	|
+| argumenty 	| radians 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff radians_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie wpisana funkcja<br> zamieni wszystkie wartości w pliku 	|
+| wywołanie w cmd 	| \<elipsoida\> -rd  \<kąt w radianach\> 	|
+
+<br>
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff radians_2_dms -cd 2
+```
+W tym wypadku program zamieni tylko dane znajdujące się w drugiej kolumnie
+w pliku wejściowym
+
+```bash
+python transformacje.py GRS80 -rd 0.4565676
+
+```
+Program zamieni podaną wartośc i zwróci w konsoli w postaci:
+```bash
+26°9'33.82755"
+```
+
+- <span style="color:green">**flh_k_xyz_80**</span>
+
+Funkcja przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80. By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy jako Krasowski. Zwraca wynik w postaci (x_grs80, y_grs80, z_grs80)
+
+| Funkcja 	| flh_k_xyz_80 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3 	|
+| argumenty 	| phi, lam, h 	|
+| wywołanie z pliku 	| Krasowski -o \<plik\> -ff flh_k_xyz_80 	|
+| wywołanie w cmd 	| Krasowski -kg  \<phi\> \<lam\> \<h\> 	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py Krasowski -o dane.txt -ff flh_k_xyz_80
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+x; y; z w układzie elipsoidy Krasowskiego utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne x ; y; z dla elipsoidy GRS80
+
+```bash
+python transformacje.py Krasowski -kg 50.000373107222224 16.001741142222222 259.5263
+```
+Program zwróci w konsoli x y z w układzie GRS80 w postaci:
+```bash
+(3948917.7691664626, 1132333.9490507406, 4863018.850918118)
+```
+- <span style="color:green">**hirvonen**</span>
+
+Przelicza współrzędne prostokątne x,y,z do geodezyjnych φ, λ, h. Transformacja zwraca wynik w radianach postaci: (φ, λ, h)
+| Funkcja 	| hirvonen 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3 	|
+| argumenty 	| x,y,z 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff hirvonen  	|
+| wywołanie w cmd 	| \<elipsoida\> -hv  \<x\> \<y\> \<z\> 	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff hirvonen
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+x; y; z utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne phi ; lam; h 
+
+```bash
+python transformacje.py GRS80 -hv 3655270.000 1030180.000 5107530.000
+```
+Program zwróci phi, lam, h w konsoli. Wartości kątowe są w radianach:
+```bash
+(0.9346536528369187, 0.2747087205477086, 337.3694756710902)
+```
+
+- <span style="color:green">**flh_2_xyz**</span>
+
+Funkcja zamienia współrzędne geodezyjne φ, λ, h na współrzędne prostokątne X,Y,Z. Jest to transformacja odwrotna do Hirvonena. Wynik w postaci: (X,Y,Z)
+
+| Funkcja 	| flh_2_xyz 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3 	|
+| argumenty 	| phi, lam, h 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff flh_2_xyz  	|
+| wywołanie w cmd 	| \<elipsoida\> -fx  \<phi\> \<lam\> \<h\> 	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff flh_2_xyz
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+phi; lam; h utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne x; y; z
+
+```bash
+python transformacje.py GRS80 -fx 53.55170961404108 15.73965028282246 337.369476
+```
+Program zwróci x,y,z w konsoli w postaci:
+```bash
+(3655270.0000161408, 1030180.000004549, 5107530.000022553)
+```
+- <span style="color:green">**neu**</span>
+
+Transformuje współrzędne geocentryczne odbiornika do współrzędnych topocentrycznych n, e, u na podstawie współrzędnych x,y,z odbiornika i satelitów. Zwraca wynik w postaci: (n,e,u)
+
+| Funkcja 	| neu 	|
+|---	|---	|
+| liczba <br>argumentów 	| 6 	|
+| argumenty 	| x_odb, y_odb, z_odb, x_sat, y_sat, z_sat 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff neu  	|
+| wywołanie w cmd 	| \<elipsoida\> -n  \<x_odb\> \<y_odb\> \<z_odb\> \<x_sat\> \<y_sat\> \<z_sat\> 	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff neu
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+x_odb, y_odb, z_odb, x_sat, y_sat, z_sat utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne n; e; u
+
+```bash
+python transformacje.py GRS80 -n 
+```
+Program zwróci n,e,u w konsoli w postaci:
+```bash
+()
+```
+- <span style="color:green">**fl_2_2000**</span>
+
+Funkcja przelicza współrzędne geodezyjne φ, λ na współrzędne geocentryczne w układzie PL-2000. Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego. Południk osiowy l0 należy podać w stopniach. ynik w postaci: (X_2000,Y_2000)
+
+| Funkcja 	| fl_2_2000 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3<br>dla elipsoidy Krasowskiego:<br>4 	|
+| argumenty 	| phi, lam, l0<br><br>dla elipsoidy Krasowskiego:<br><br>phi, lam, l0, h 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff fl_2_2000  	|
+| wywołanie w cmd 	| \<elipsoida\> -20  \<phi\> \<lam\> \<l0\><br><br>dla elipsoidy Krasowskiego:<br><br>Krasowski -20  \<phi\> \<lam\> \<l0\> \<h\>  	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff fl_2_2000
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+phi;lam;l0 lub dla elipsoidy Krasowskiego: phi;lam;l0;h utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne x20;y20
+
+```bash
+python transformacje.py Krasowski -20 50.000373107222224 16.001741142222222 15 259.5263
+```
+Program zwróci x20, y20 w konsoli w postaci:
+```bash
+(5540899.663987989, 5571689.605030992)
+```
+- <span style="color:green">**fl_2_2000**</span>
+
+Funkcja przelicza współrzędne geodezyjne φ, λ
+na współrzędne geocentryczne w układzie PL-1992.
+Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
+Wynik w postaci: (X_1992,Y_1992)
+
+| Funkcja 	| fl_2_1992 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3<br>dla elipsoidy Krasowskiego:<br>4 	|
+| argumenty 	| phi, lam, l0<br><br>dla elipsoidy Krasowskiego:<br><br>phi, lam, l0, h 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff fl_2_1992  	|
+| wywołanie w cmd 	| \<elipsoida\> -92  \<phi\> \<lam\> \<l0\><br><br>dla elipsoidy Krasowskiego:<br><br>Krasowski -92  \<phi\> \<lam\> \<l0\> \<h\>  	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff fl_2_1992
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+phi;lam;l0 lub dla elipsoidy Krasowskiego: phi;lam;l0;h utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne x92;y92
+
+```bash
+python transformacje.py GRS80 -92 53.55170961388889 15.739650283333333 19
+```
+Program zwróci x92, y92 w konsoli w postaci:
+```bash
+(636809.3247729586, 284095.1148406571)
 ```
 
 # Wywołanie
@@ -24,7 +241,7 @@ python transformacje.py {nazwa elipsoidy} {plik z danymi} {funkcja}
 ```
 **Przykład:**
 ```bash
-python transforamcje.py GRS80 dane.txt hirvonen
+python transformacje.py GRS80 dane.txt hirvonen
 ```
 Podstawowe wywołanie dla współrzędncyh "z palca" :
 ```bash
@@ -33,7 +250,7 @@ python transformacje.py {nazwa elipsoidy} {flaga funkcji} {współrzędne oddzie
 
 **Przykład:**
 ```bash
-python transforamcje.py GRS80 --flh_2_xyz 51 21 100
+python transformacje.py GRS80 --flh_2_xyz 51 21 100
 ```
 
 
