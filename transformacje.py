@@ -26,9 +26,8 @@ class Transformations:
     @staticmethod
     def degrees_2_dms(degrees: float) -> str:
         """
-    Funkcja ta zmienia wartość kątów ze stopni dziesiętnych
-    na wartość w stopniach minutach i sekundach,
-    i zwraca ją jako krotkę (deg, min, sec)
+    Zamienia wartość w stopniach na wartość w stopniach, minutach i sekundach,
+    i zwraca ją jako str: deg°min'sec"
         """
         assert type(degrees) == float or int,\
             "Can't convert value with type different than float or int"
@@ -39,15 +38,14 @@ class Transformations:
         return f'{int(deg)}{d_sign}{int(mnt)}\'{sec:7.5f}\"'
 
     @staticmethod
-    def radians_2_dms(value: float) -> str:
+    def radians_2_dms(radians: float) -> str:
         """
     Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach,
-    i zwraca ją jako krotkę (deg, min, sec)
-
+    i zwraca ją jako str: deg°min'sec"
         """
-        assert type(value) == float or int,\
+        assert type(radians) == float or int,\
             "Can't convert value with type different than float or int"
-        dd = value * 180/np.pi
+        dd = radians * 180/np.pi
         deg = int(np.trunc(dd))  # ucina część ułamkową
         mnt = int(np.trunc((dd - deg)*60))
         sec = ((dd - deg)*60-mnt)*60
@@ -92,7 +90,7 @@ class Transformations:
 
     def hirvonen(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         """
-    Przelicza współrzędne prostokątne w układzie elipsoidy GRS
+    Przelicza współrzędne prostokątne x,y,z
     do geodezyjnych φ, λ, h. Transformacja
     zwraca wynik w radianach postaci: (φ, λ, h)
         """
@@ -114,7 +112,7 @@ class Transformations:
         """
 
     Zamienia współrzędne geodezyjne φ, λ, h do współrzędnych
-    prostokątnych X,Y,Z w układzie elipsoidy GRS 80.
+    prostokątnych X,Y,Z.
     Transformacja odwrotna do Hirvonena.
     wynik w postaci: (X,Y,Z)
 
@@ -131,10 +129,12 @@ class Transformations:
 
     def neu(self, x_odbiornika: float, y_odbiornika: float,
             z_odbiornika: float, x_satelity: float,
-            y_satelity: float, z_satelity: float) -> float:
+            y_satelity: float, z_satelity: float) -> tuple[float, float, float]:
         """
 Transformuje współrzędne geocentryczne odbiornika do
-współrzędnych topocentrycznych n, e, u
+współrzędnych topocentrycznych n, e, u na podstawie współrzędnych x,y,z odbiornika
+i satelitów
+zwraca wynik w postaci: (n,e,u)
         """
         phi_odbiornika = self.hirvonen(
             x_odbiornika, y_odbiornika, z_odbiornika)[0]
@@ -153,16 +153,13 @@ współrzędnych topocentrycznych n, e, u
                 y_satelity, z_odbiornika - z_satelity]
 
         neu = Rneu.T @ X_sr
-        return neu
+        return (neu[0], neu[1], neu[2])
 
     def fl_2_2000(self, phi: float, lam: float,
                   l0: float, h_krasowski=None) -> tuple[float, float]:
         '''
         Funkcja przelicza współrzędne geodezyjne φ, λ
         na współrzędne geocentryczne w układzie PL-2000.
-        Istnieje możliwość wyboru elipsoidy,
-        z której przeliczane będą współrzędne, w tym celu
-        należy podać jej nazwę ("WGS84", "GRS80" lub "Krasowski").
         Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
         Południk osiowy l0 należy podać w stopniach.
         wynik w postaci: (X_2000,Y_2000)
@@ -224,9 +221,7 @@ współrzędnych topocentrycznych n, e, u
         """
         Funkcja przelicza współrzędne geodezyjne φ, λ
         na współrzędne geocentryczne w układzie PL-1992.
-        Istnieje możliwość wyboru elipsoidy,
-        z której przeliczane będą współrzędne, w tym celu
-        należy podać jej nazwę ("WGS84", "GRS80" lub "Krasowski")
+        Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
         południk osiowy l0 należy podać w stopniach.
         wynik w postaci: (X_1992,Y_1992)
         """
@@ -278,7 +273,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
                       file_title: str, column_number, function):
     """
     Funkcja przelicza współrzędne podane w pliku wejściowym na współrzędne w wybranym przez
-    użytkownika układzie. W wyniku działania zwraca plik, który w
+    użytkownika układzie. W wyniku działania zwraca plik results.txt, który w
     kolejnych wierszach ma zapisane wyniki transformacji dla danych w tym samym wierszu
     w pliku wejściowym
     """
@@ -397,10 +392,12 @@ def argparse_data():
                         type=int, help="""Specify columns from which
                         you want to convert values to degrees""")
     args = parser.parse_args()
+
     elipsoid = Transformations(args.elipsoid)
     column_number = args.column_dms
-    if column_number is not None:
-        assert args.file_functions and args.open_file,\
+
+    if column_number:
+        assert args.file_functions,\
             """To run the --column_dms flag, you must specify the file you want to read from
         and the method (--file_functions) you want to use"""
     if args.file_functions:
