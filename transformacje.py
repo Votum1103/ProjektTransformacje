@@ -26,7 +26,7 @@ class Transformations:
     @staticmethod
     def degrees_2_dms(degrees: float) -> str:
         """
-    Zamienia wartość w stopniach na wartość w stopniach, minutach i sekundach,
+    Zamienia wartość w stopniach na wartość w stopniach, minutach i sekundach
     i zwraca ją jako str: deg°min'sec"
         """
         assert type(degrees) == float or int,\
@@ -52,8 +52,8 @@ class Transformations:
         d_sign = "\N{DEGREE SIGN}"
         return f'{deg}{d_sign}{mnt}\'{sec:7.5f}\"'
 
-    def xyz_kras_2_xyz_grs80(self, phi_k: float,
-                             lam_k: float, h_k: float) -> tuple[float, float, float]:
+    def flh_k_xyz_80(self, phi_k: float,
+                     lam_k: float, h_k: float) -> tuple[float, float, float]:
         """
         Przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80.
         By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy
@@ -161,9 +161,7 @@ zwraca wynik w postaci: (n,e,u)
         Funkcja przelicza współrzędne geodezyjne φ, λ
         na współrzędne geocentryczne w układzie PL-2000.
         Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
-        Południk osiowy l0 należy podać w stopniach.
         wynik w postaci: (X_2000,Y_2000)
-
 
         '''
         a = self.a
@@ -172,7 +170,7 @@ zwraca wynik w postaci: (n,e,u)
         if self.elipsoid_name == "Krasowski":
             assert h_krasowski is not None, \
                 "You didn't specify the height for the Krasowski ellipsoid"
-            x, y, z = self.xyz_kras_2_xyz_grs80(phi, lam, h_krasowski)
+            x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
             phi, lam, h = self.hirvonen(x, y, z)
@@ -222,8 +220,7 @@ zwraca wynik w postaci: (n,e,u)
         Funkcja przelicza współrzędne geodezyjne φ, λ
         na współrzędne geocentryczne w układzie PL-1992.
         Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
-        południk osiowy l0 należy podać w stopniach.
-        wynik w postaci: (X_1992,Y_1992)
+        Wynik w postaci: (X_1992,Y_1992)
         """
 
         a = self.a
@@ -231,7 +228,7 @@ zwraca wynik w postaci: (n,e,u)
         if self.elipsoid_name == "Krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
-            x, y, z = self.xyz_kras_2_xyz_grs80(phi, lam, h_krasowski)
+            x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
             phi, lam, h = self.hirvonen(x, y, z)
@@ -282,7 +279,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
     assert file_title is not None,\
         """you didn't specify the name of the file from
 which you would like to transport the coordinates"""
-    if args_function_title in ("hirvonen", "xyz_kras_2_xyz_grs80", "flh_2_xyz"):
+    if args_function_title in ("hirvonen", "flh_k_xyz_80", "flh_2_xyz"):
         input_nr = 3
         return_nr = 3
     elif args_function_title == "neu":
@@ -350,18 +347,18 @@ def argparse_data():
 
     parser.add_argument("--file_functions", "-ff",
                         choices=["hirvonen", "flh_2_xyz", "neu",
-                                 "fl_2_1992", "fl_2_2000", "xyz_kras_2_xyz_grs80",
+                                 "fl_2_1992", "fl_2_2000", "flh_k_xyz_80",
                                  "radians_2_dms", "degrees_2_dms"],
                         help="""use it only with open_file to specify,
     how do you want to transform coordinates giwen in file""")
 
-    parser.add_argument("--hirvonen", "-hirv", nargs="*", type=float, default=None, help="""
+    parser.add_argument("--hirvonen", "-hv", nargs="*", type=float, help="""
     Program transforms coordinates from x,y,z to phi, lambda, height""")
 
-    parser.add_argument("--flh_2_xyz", "-fx", nargs="*", type=float, default=None, help="""
+    parser.add_argument("--flh_2_xyz", "-fx", nargs="*", type=float, help="""
     Program transforms coordinates from phi, lambda to xyz""")
 
-    parser.add_argument("--neu", "-n", nargs="*", type=float, default=None, help="""
+    parser.add_argument("--neu", "-n", nargs="*", type=float, help="""
     Program transforms coordinates based on receiver coordinates (x,y,z)
     and satellite's x,y,z  to neu (topocentric coordinates)""")
 
@@ -378,7 +375,7 @@ def argparse_data():
     enter phi, lam and prime meridian,
     if you chose Krasowski elipsoid you need to add height at the end""")
 
-    parser.add_argument("--xyz_kras_2_xyz_grs80", "-kg", nargs="*",
+    parser.add_argument("--flh_k_xyz_80", "-kg", nargs="*",
                         type=float, help=""" Program transforms coordinates
     x,y,z from Krasowski elipsoid to x,y,z on GRS80 elipsoid.
     Before chosing this method make sure you entered Krasowski as elipsoid name""")
@@ -406,10 +403,10 @@ def argparse_data():
         file_title = args.open_file
         args_function_title = args.file_functions
         names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
-                         "fl_2_2000", "xyz_kras_2_xyz_grs80", "radians_2_dms", "degrees_2_dms"],
+                         "fl_2_2000", "flh_k_xyz_80", "radians_2_dms", "degrees_2_dms"],
                          [elipsoid.hirvonen, elipsoid.flh_2_xyz,
                          elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
-                         elipsoid.xyz_kras_2_xyz_grs80,
+                         elipsoid.flh_k_xyz_80,
                           Transformations.radians_2_dms, Transformations.degrees_2_dms]))
 
         from_file_to_file(elipsoid,
@@ -426,12 +423,12 @@ def argparse_data():
         print(elipsoid.hirvonen(*args.hirvonen))
     if args.neu:
         print(elipsoid.neu(*args.neu))
-    if args.xyz_kras_2_xyz_grs80:
-        print(elipsoid.xyz_kras_2_xyz_grs80(*args.xyz_kras_2_xyz_grs80))
+    if args.flh_k_xyz_80:
+        print(elipsoid.flh_k_xyz_80(*args.flh_k_xyz_80))
     if args.radians_2_dms:
-        print(Transformations.radians_2_dms(args.dms))
+        print(Transformations.radians_2_dms(args.radians_2_dms))
     if args.degrees_2_dms:
-        print(Transformations.degrees_2_dms(args.dms))
+        print(Transformations.degrees_2_dms(args.degrees_2_dms))
 
 
 if __name__ == "__main__":
