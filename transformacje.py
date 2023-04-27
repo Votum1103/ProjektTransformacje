@@ -274,7 +274,8 @@ współrzędnych topocentrycznych n, e, u
         return (x92, y92)
 
 
-def from_file_to_file(elipsoid, args_function_title: str, file_title: str, function):
+def from_file_to_file(elipsoid, args_function_title: str,
+                      file_title: str, column_number, function):
     """
     Funkcja przelicza współrzędne podane w pliku wejściowym na współrzędne w wybranym przez
     użytkownika układzie. W wyniku działania zwraca plik, który w
@@ -307,15 +308,22 @@ which you would like to transport the coordinates"""
     with open(file_title, "r", encoding="UTF-8") as file:
         data = []
         for wiersz in file.readlines():
-            wsp = wiersz[:-1].replace("\n", "").replace(" ", "").split(";")
+            wsp = wiersz.replace("\n", "").replace(
+                " ", "").split(";")
             for element in wsp:
                 if element == "":
                     wsp.remove(element)
             data.append(wsp)
     if args_function_title in ["radians_2_dms", "degrees_2_dms"]:
-        for list in data:
-            results.append([function(float(value))
-                           for value in list])
+        if column_number is not None:
+            column_number = column_number - 1
+            for lists in data:
+                lists[column_number] = function(float(lists[column_number]))
+                results.append(lists)
+        else:
+            for lists in data:
+                results.append([function(float(value))
+                                for value in lists])
         with open("results.txt", "w") as file:
             for lists in results:
                 file.write(''.join('%s;'*return_nr % x for x in lists))
@@ -382,13 +390,22 @@ def argparse_data():
     parser.add_argument("--radians_2_dms", "-rd",
                         type=float, help=""" Program converts value from radians
                           to degrees, minutes and seconds""")
+    parser.add_argument("--degrees_2_dms", "-dd",
+                        type=float, help=""" Program converts value from degrees
+                          to degrees, minutes and seconds""")
+    parser.add_argument("--column_dms", "-cd",
+                        type=int, help="""Specify columns from which
+                        you want to convert values to degrees""")
     args = parser.parse_args()
     elipsoid = Transformations(args.elipsoid)
+    column_number = args.column_dms
+    if column_number is not None:
+        assert args.file_functions and args.open_file,\
+            """To run the --column_dms flag, you must specify the file you want to read from
+        and the method (--file_functions) you want to use"""
     if args.file_functions:
-        assert args.open_file and args.elipsoid,\
-            "Aby uruchomić flage -ff musisz podać plik, z którego chcesz czytać"
-
-    if args.file_functions and args.open_file is not None:
+        assert args.open_file,\
+            "To run the --file_functions flag, you must specify the file you want to read from"
         file_title = args.open_file
         args_function_title = args.file_functions
         names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
@@ -399,7 +416,8 @@ def argparse_data():
                           Transformations.radians_2_dms, Transformations.degrees_2_dms]))
 
         from_file_to_file(elipsoid,
-                          args_function_title, file_title, names[args_function_title])
+                          args_function_title, file_title,
+                          column_number, names[args_function_title])
 
     if args.fl_2_1992:
         print(elipsoid.fl_2_1992(*args.fl_2_1992))
@@ -415,6 +433,8 @@ def argparse_data():
         print(elipsoid.xyz_kras_2_xyz_grs80(*args.xyz_kras_2_xyz_grs80))
     if args.radians_2_dms:
         print(Transformations.radians_2_dms(args.dms))
+    if args.degrees_2_dms:
+        print(Transformations.degrees_2_dms(args.dms))
 
 
 if __name__ == "__main__":
