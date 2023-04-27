@@ -132,8 +132,8 @@ class Transformations:
             y_satelity: float, z_satelity: float) -> tuple[float, float, float]:
         """
 Transformuje współrzędne geocentryczne odbiornika do
-współrzędnych topocentrycznych n, e, u na podstawie współrzędnych x,y,z odbiornika
-i satelitów
+współrzędnych topocentrycznych n, e, u satelitów na podstawie współrzędnych
+x,y,z odbiornika i satelitów
 zwraca wynik w postaci: (n,e,u)
         """
         phi_odbiornika = self.hirvonen(
@@ -149,8 +149,8 @@ zwraca wynik w postaci: (n,e,u)
                          [np.cos(phi_odbiornika), 0,
                           np.sin(phi_odbiornika)]])
 
-        X_sr = [x_odbiornika - x_satelity, y_odbiornika -
-                y_satelity, z_odbiornika - z_satelity]
+        X_sr = [x_satelity - x_odbiornika, y_satelity -
+                y_odbiornika, z_satelity - z_odbiornika]
 
         neu = Rneu.T @ X_sr
         return (neu[0], neu[1], neu[2])
