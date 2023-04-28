@@ -96,9 +96,9 @@ x; y; z utworzy plik results.txt, w którym w każdym wierszu będą oddzielone 
 ```bash
 python transformacje.py GRS80 -hv 3655270.000 1030180.000 5107530.000
 ```
-Program zwróci phi, lam, h w konsoli. Wartości kątowe są w radianach:
+Program zwróci phi, lam, h w konsoli. Wartości kątowe są w stopniach dziesiętnych:
 ```bash
-(0.9346536528369187, 0.2747087205477086, 337.3694756710902)
+(53.55170961404108, 15.73965028282246, 337.3694756710902)
 ```
 
 - <span style="color:green">**flh_2_xyz**</span>
