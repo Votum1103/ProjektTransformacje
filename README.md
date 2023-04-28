@@ -12,7 +12,6 @@ Program umożliwia konwertowanie współrzędnych z następujących elipsoid: **
 ```mermaid
 graph LR
 A[degrees] -->|degrees_2_dms| B[dms]
-C[φ,λ,h Krasowski] -->|flh_k_xyz_80| D[x,y,z GRS80]
 E[x,y,z] -->|hirvonen| F[φ,λ,h]
 G[φ,λ,h] -->|flh_2_xyz| H[x,y,z]
 I[x,y,z odbiornika x,y,z staelity] -->|neu| J[n,e,u]
@@ -52,31 +51,6 @@ Program zamieni podaną wartośc i zwróci w konsoli w postaci:
 50°27'23.64336"
 ```
 
-- <span style="color:green">**flh_k_xyz_80**</span>
-
-Funkcja przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80. By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy jako Krasowski. Zwraca wynik w postaci (x_grs80, y_grs80, z_grs80)
-
-| Funkcja 	| flh_k_xyz_80 	|
-|---	|---	|
-| liczba <br>argumentów 	| 3 	|
-| argumenty 	| phi, lam, h 	|
-| wywołanie z pliku 	| Krasowski -o \<plik\> -ff flh_k_xyz_80 	|
-| wywołanie w cmd 	| Krasowski -kg  \<phi\> \<lam\> \<h\> 	|
-
-**Przykładowe wywołanie:**
-```bash
-python transformacje.py Krasowski -o dane.txt -ff flh_k_xyz_80
-```
-Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
-x; y; z w układzie elipsoidy Krasowskiego utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne x ; y; z dla elipsoidy GRS80
-
-```bash
-python transformacje.py Krasowski -kg 50.000373107222224 16.001741142222222 259.5263
-```
-Program zwróci w konsoli x y z w układzie GRS80 w postaci:
-```bash
-(3948917.7691664626, 1132333.9490507406, 4863018.850918118)
-```
 - <span style="color:green">**hirvonen**</span>
 
 Przelicza współrzędne prostokątne x,y,z do geodezyjnych φ, λ, h. Transformacja zwraca wynik w radianach postaci: (φ, λ, h)
