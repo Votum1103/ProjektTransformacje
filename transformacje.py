@@ -140,75 +140,15 @@ zwraca wynik w postaci: (n,e,u)
         neu = Rneu.T @ X_sr
         return (neu[0], neu[1], neu[2])
 
-    def fl_2_2000(self, phi: float, lam: float,
+    def fl_2_xygk(self, phi: float, lam: float,
                   l0: float, h_krasowski=None) -> tuple[float, float]:
         '''
         Funkcja przelicza współrzędne geodezyjne φ, λ
-        na współrzędne geocentryczne w układzie PL-2000.
+        na współrzędne geocentryczne w układzie Gaussa-Krügera.
         Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
         wynik w postaci: (X_2000,Y_2000)
 
         '''
-        a = self.a
-        e2 = self.e2
-        m = 0.999923
-        if self.elipsoid_name == "Krasowski":
-            assert h_krasowski is not None, \
-                "You didn't specify the height for the Krasowski ellipsoid"
-            x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
-            e2 = self.e2 = 0.00669438002290
-            a = self.a = 6378137
-            phi_lam = self.hirvonen(x, y, z)
-            phi = phi_lam[0]
-            lam = phi_lam[1]
-        phi = np.deg2rad(phi)
-        lam = np.deg2rad(lam)
-
-        b2 = (a**2)*(1-e2)
-        ep2 = (a**2 - b2)/b2
-        dl = lam - np.deg2rad(l0)
-        t = np.tan(phi)
-        ni2 = ep2 * np.cos(phi)**2
-        n = a / np.sqrt(1-e2 * np.sin(phi)**2)
-        A0 = 1 - e2/4-3*e2**2/64-5*e2**3/256
-        A2 = 3/8*(e2+e2**2/4+15*e2**3/128)
-        A4 = 15/256*(e2**2 + 3*e2**3/4)
-        A6 = 35*e2**3/3072
-        sig = a*(A0 * phi - A2 * np.sin(2*phi) + A4 *
-                 np.sin(4*phi) - A6*np.sin(6*phi))
-        xgk_part_1 = (dl**2)/2 * n * np.sin(phi) * np.cos(phi)
-        xgk_part_2 = (dl**2)/12 * np.cos(phi)**2 * \
-            (5 - t**2 + 9*ni2 + 4*ni2**2)
-        xgk_part_3 = dl**4/360 * \
-            np.cos(phi)**4 * (61 - 58*t**2 + t**4 + 270*ni2 - 330*ni2*t**2)
-        xgk = sig + xgk_part_1 * (1 + xgk_part_2 + xgk_part_3)
-
-        ygk_part_1 = dl * n * np.cos(phi)
-        ygk_part_2 = (dl ** 2) / 6 * np.cos(phi) ** 2 * (1 - t ** 2 + ni2)
-        ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
-            (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
-        ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
-
-        pas = nr = 0
-        for _ in range(30):
-            if round(np.rad2deg(lam)/3, 0) == pas:
-                nr = pas
-                break
-            pas += 1
-
-        x20 = xgk * m
-        y20 = ygk * m + nr * 1e6 + 5e5
-        return (x20, y20)
-
-    def fl_2_1992(self, phi: float, lam: float,
-                  l0: float, h_krasowski=None) -> tuple[float, float]:
-        """
-        Funkcja przelicza współrzędne geodezyjne φ, λ
-        na współrzędne geocentryczne w układzie PL-1992.
-        Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
-        Wynik w postaci: (X_1992,Y_1992)
-        """
-
         a = self.a
         e2 = self.e2
         if self.elipsoid_name == "Krasowski":
@@ -222,8 +162,6 @@ zwraca wynik w postaci: (n,e,u)
             lam = phi_lam[1]
         phi = np.deg2rad(phi)
         lam = np.deg2rad(lam)
-
-        m92 = 0.9993
         b2 = (a**2)*(1-e2)
         ep2 = (a**2 - b2)/b2
         dl = lam - np.deg2rad(l0)
@@ -248,6 +186,40 @@ zwraca wynik w postaci: (n,e,u)
         ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
             (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
         ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
+        return (xgk, ygk)
+
+    def fl_2_2000(self, phi: float, lam: float,
+                  l0: float, h_krasowski=None) -> tuple[float, float]:
+        '''
+        Funkcja przelicza współrzędne geodezyjne φ, λ
+        na współrzędne geocentryczne w układzie PL-2000.
+        Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
+        wynik w postaci: (X_2000,Y_2000)
+
+        '''
+        m = 0.999923
+        xgk, ygk = self.fl_2_xygk(phi, lam, l0, h_krasowski)
+        pas = nr = 0
+        for _ in range(30):
+            if round(lam/3, 0) == pas:
+                nr = pas
+                break
+            pas += 1
+
+        x20 = xgk * m
+        y20 = ygk * m + nr * 1e6 + 5e5
+        return (x20, y20)
+
+    def fl_2_1992(self, phi: float, lam: float,
+                  l0: float, h_krasowski=None) -> tuple[float, float]:
+        """
+        Funkcja przelicza współrzędne geodezyjne φ, λ
+        na współrzędne geocentryczne w układzie PL-1992.
+        Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego.
+        Wynik w postaci: (X_1992,Y_1992)
+        """
+        m92 = 0.9993
+        xgk, ygk = self.fl_2_xygk(phi, lam, l0, h_krasowski)
         x92 = xgk * m92 - 5300000
         y92 = ygk * m92 + 500000
         return (x92, y92)
@@ -267,7 +239,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
     elif args_function_title == "neu":
         input_nr = 6
         return_nr = 1
-    elif args_function_title in ("fl_2_1992", "fl_2_2000"):
+    elif args_function_title in ("fl_2_1992", "fl_2_2000", "fl_2_xygk"):
         if elipsoid.elipsoid_name == "Krasowski":
             input_nr = 4
             return_nr = 2
@@ -328,7 +300,7 @@ def argparse_data():
                         help="If you want to enter coordinates in file specify file tittle")
 
     parser.add_argument("--file_functions", "-ff",
-                        choices=["hirvonen", "flh_2_xyz", "neu",
+                        choices=["hirvonen", "flh_2_xyz", "neu", "fl_2_xygk",
                                  "fl_2_1992", "fl_2_2000", "flh_k_xyz_80", "degrees_2_dms"],
                         help="""use it only with open_file to specify,
     how do you want to transform coordinates giwen in file""")
@@ -342,7 +314,12 @@ def argparse_data():
     parser.add_argument("--neu", "-n", nargs="*", type=float, help="""
     Program transforms coordinates based on receiver coordinates (x,y,z)
     and satellite's x,y,z  to neu (topocentric coordinates)""")
-
+    parser.add_argument("--fl_2_xygk", "-gk", nargs="*",
+                        type=float, help="""
+    Program transforms coordinates from phi,
+    lambda to x, y in Gauss-Krüger coordinate. If elipsoid GRS80 or WGS84 is chosen
+    enter phi, lam and prime meridian,
+    if you chose Krasowski elipsoid you need to add height at the end""")
     parser.add_argument("--fl_2_1992", "-92", nargs="*", type=float, help="""
     Program transforms coordinates from phi,
     lambda to x, y in 1992 coordinate. If elipsoid GRS80 or WGS84 is chosen
@@ -381,10 +358,10 @@ def argparse_data():
             "To run the --file_functions flag, you must specify the file you want to read from"
         file_title = args.open_file
         args_function_title = args.file_functions
-        names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
+        names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_xygk",
                          "fl_2_2000", "flh_k_xyz_80", "degrees_2_dms"],
                          [elipsoid.hirvonen, elipsoid.flh_2_xyz,
-                         elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
+                         elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_xygk, elipsoid.fl_2_2000,
                          elipsoid.flh_k_xyz_80, Transformations.degrees_2_dms]))
 
         from_file_to_file(elipsoid,
@@ -395,6 +372,8 @@ def argparse_data():
         print(elipsoid.fl_2_1992(*args.fl_2_1992))
     if args.fl_2_2000:
         print(elipsoid.fl_2_2000(*args.fl_2_2000))
+    if args.fl_2_xygk:
+        print(elipsoid.fl_2_xygk(*args.fl_2_xygk))
     if args.flh_2_xyz:
         print(elipsoid.flh_2_xyz(*args.flh_2_xyz))
     if args.hirvonen:
