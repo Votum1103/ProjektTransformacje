@@ -37,21 +37,6 @@ class Transformations:
         d_sign = "\N{DEGREE SIGN}"
         return f'{int(deg)}{d_sign}{int(mnt)}\'{sec:7.5f}\"'
 
-    @staticmethod
-    def radians_2_dms(radians: float) -> str:
-        """
-    Zamienia wartość w radianach na wartość w stopniach, minutach i sekundach,
-    i zwraca ją jako str: deg°min'sec"
-        """
-        assert type(radians) == float or int,\
-            "Can't convert value with type different than float or int"
-        dd = radians * 180/np.pi
-        deg = int(np.trunc(dd))  # ucina część ułamkową
-        mnt = int(np.trunc((dd - deg)*60))
-        sec = ((dd - deg)*60-mnt)*60
-        d_sign = "\N{DEGREE SIGN}"
-        return f'{deg}{d_sign}{mnt}\'{sec:7.5f}\"'
-
     def flh_k_xyz_80(self, phi_k: float,
                      lam_k: float, h_k: float) -> tuple[float, float, float]:
         """
@@ -92,7 +77,7 @@ class Transformations:
         """
     Przelicza współrzędne prostokątne x,y,z
     do geodezyjnych φ, λ, h. Transformacja
-    zwraca wynik w radianach postaci: (φ, λ, h)
+    zwraca wynik w stopniach dziesiętnych postaci: (φ, λ, h)
         """
         a = self.a
         e2 = self.e2
@@ -106,7 +91,7 @@ class Transformations:
             if abs(phi_p - phi) < (0.000001/206265):
                 break
         lam = np.arctan2(y, x)
-        return (phi, lam, h)
+        return (phi*180/np.pi, lam*180/np.pi, h)
 
     def flh_2_xyz(self, phi: float, lam: float, h: float) -> tuple[float, float, float]:
         """
@@ -136,10 +121,10 @@ współrzędnych topocentrycznych n, e, u satelitów na podstawie współrzędny
 x,y,z odbiornika i satelitów
 zwraca wynik w postaci: (n,e,u)
         """
-        phi_odbiornika = self.hirvonen(
-            x_odbiornika, y_odbiornika, z_odbiornika)[0]
-        lam_odbiornika = self.hirvonen(
-            x_odbiornika, y_odbiornika, z_odbiornika)[1]
+        phi_lam_odbiornika = self.hirvonen(
+            x_odbiornika, y_odbiornika, z_odbiornika)
+        phi_odbiornika = np.deg2rad(phi_lam_odbiornika[0])
+        lam_odbiornika = np.deg2rad(phi_lam_odbiornika[1])
         Rneu = np.array([[-np.sin(phi_odbiornika) * np.cos(lam_odbiornika),
                         -np.sin(lam_odbiornika),
                         np.cos(phi_odbiornika) * np.cos(lam_odbiornika)],
@@ -173,10 +158,11 @@ zwraca wynik w postaci: (n,e,u)
             x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
-            phi, lam, h = self.hirvonen(x, y, z)
-        else:
-            phi = np.deg2rad(phi)
-            lam = np.deg2rad(lam)
+            phi_lam = self.hirvonen(x, y, z)
+            phi = phi_lam[0]
+            lam = phi_lam[1]
+        phi = np.deg2rad(phi)
+        lam = np.deg2rad(lam)
 
         b2 = (a**2)*(1-e2)
         ep2 = (a**2 - b2)/b2
@@ -231,10 +217,11 @@ zwraca wynik w postaci: (n,e,u)
             x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
-            phi, lam, h = self.hirvonen(x, y, z)
-        else:
-            phi = np.deg2rad(phi)
-            lam = np.deg2rad(lam)
+            phi_lam = self.hirvonen(x, y, z)
+            phi = phi_lam[0]
+            lam = phi_lam[1]
+        phi = np.deg2rad(phi)
+        lam = np.deg2rad(lam)
 
         m92 = 0.9993
         b2 = (a**2)*(1-e2)
@@ -301,7 +288,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
                 if element == "":
                     wsp.remove(element)
             data.append(wsp)
-    if args_function_title in ["radians_2_dms", "degrees_2_dms"]:
+    if args_function_title == "degrees_2_dms":
         if column_number is not None:
             column_number = column_number - 1
             for lists in data:
@@ -342,8 +329,7 @@ def argparse_data():
 
     parser.add_argument("--file_functions", "-ff",
                         choices=["hirvonen", "flh_2_xyz", "neu",
-                                 "fl_2_1992", "fl_2_2000", "flh_k_xyz_80",
-                                 "radians_2_dms", "degrees_2_dms"],
+                                 "fl_2_1992", "fl_2_2000", "flh_k_xyz_80", "degrees_2_dms"],
                         help="""use it only with open_file to specify,
     how do you want to transform coordinates giwen in file""")
 
@@ -374,9 +360,7 @@ def argparse_data():
                         type=float, help=""" Program transforms coordinates
     x,y,z from Krasowski elipsoid to x,y,z on GRS80 elipsoid.
     Before chosing this method make sure you entered Krasowski as elipsoid name""")
-    parser.add_argument("--radians_2_dms", "-rd",
-                        type=float, help=""" Program converts value from radians
-                          to degrees, minutes and seconds""")
+
     parser.add_argument("--degrees_2_dms", "-dd",
                         type=float, help=""" Program converts value from degrees
                           to degrees, minutes and seconds""")
@@ -398,11 +382,10 @@ def argparse_data():
         file_title = args.open_file
         args_function_title = args.file_functions
         names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992",
-                         "fl_2_2000", "flh_k_xyz_80", "radians_2_dms", "degrees_2_dms"],
+                         "fl_2_2000", "flh_k_xyz_80", "degrees_2_dms"],
                          [elipsoid.hirvonen, elipsoid.flh_2_xyz,
                          elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_2000,
-                         elipsoid.flh_k_xyz_80,
-                          Transformations.radians_2_dms, Transformations.degrees_2_dms]))
+                         elipsoid.flh_k_xyz_80, Transformations.degrees_2_dms]))
 
         from_file_to_file(elipsoid,
                           args_function_title, file_title,
@@ -420,8 +403,6 @@ def argparse_data():
         print(elipsoid.neu(*args.neu))
     if args.flh_k_xyz_80:
         print(elipsoid.flh_k_xyz_80(*args.flh_k_xyz_80))
-    if args.radians_2_dms:
-        print(Transformations.radians_2_dms(args.radians_2_dms))
     if args.degrees_2_dms:
         print(Transformations.degrees_2_dms(args.degrees_2_dms))
 
