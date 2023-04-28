@@ -37,42 +37,6 @@ class Transformations:
         d_sign = "\N{DEGREE SIGN}"
         return f'{int(deg)}{d_sign}{int(mnt)}\'{sec:7.5f}\"'
 
-    def flh_k_xyz_80(self, phi_k: float,
-                     lam_k: float, h_k: float) -> tuple[float, float, float]:
-        """
-        Przelicza współrzędne xyz z elipsoidy Krasowskiego na xyz w układzie GRS80.
-        By wykonać transformacje należy przy inicjalizacji klasy wskazać nazwę elipsoidy
-        jako Krasowski.
-        Zwraca wynik w postaci (x_grs80, y_grs80, z_grs80)
-        """
-        assert self.elipsoid_name == "Krasowski",\
-            "You didn't select the Krasowski ellipsoid"
-
-        xk, yk, zk = self.flh_2_xyz(phi_k, lam_k, h_k)
-
-        params = {
-            'Tx': -33.4297,
-            'Ty': 146.5746,
-            'Tz': 76.2865,
-            'd11': 1 - 0.84078048E-6,
-            'd12': - 4.08959962E-6,
-            'd13': -0.25614575E-6,
-            'd21': +4.08960007E-6,
-            'd22': 1 - 0.84078196E-6,
-            'd23': +1.73888389E-6,
-            'd31': +0.25613864E-6,
-            'd32': -1.73888494E-6,
-            'd33': 1 - 0.84077363E-6
-        }
-
-        x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
-            (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
-        y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
-            (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
-        z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
-            (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
-        return (x_grs80, y_grs80, z_grs80)
-
     def hirvonen(self, x: float, y: float, z: float) -> tuple[float, float, float]:
         """
     Przelicza współrzędne prostokątne x,y,z
@@ -154,10 +118,31 @@ zwraca wynik w postaci: (n,e,u)
         if self.elipsoid_name == "Krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
-            x, y, z = self.flh_k_xyz_80(phi, lam, h_krasowski)
+            xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
+            params = {
+                'Tx': -33.4297,
+                'Ty': 146.5746,
+                'Tz': 76.2865,
+                'd11': 1 - 0.84078048E-6,
+                'd12': - 4.08959962E-6,
+                'd13': -0.25614575E-6,
+                'd21': +4.08960007E-6,
+                'd22': 1 - 0.84078196E-6,
+                'd23': +1.73888389E-6,
+                'd31': +0.25613864E-6,
+                'd32': -1.73888494E-6,
+                'd33': 1 - 0.84077363E-6
+            }
+
+            x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
+                (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
+            y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
+                (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
+            z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
+                (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
-            phi_lam = self.hirvonen(x, y, z)
+            phi_lam = self.hirvonen(x_grs80, y_grs80, z_grs80)
             phi = phi_lam[0]
             lam = phi_lam[1]
         phi = np.deg2rad(phi)
@@ -233,7 +218,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
     kolejnych wierszach ma zapisane wyniki transformacji dla danych w tym samym wierszu
     w pliku wejściowym
     """
-    if args_function_title in ("hirvonen", "flh_k_xyz_80", "flh_2_xyz"):
+    if args_function_title in ("hirvonen", "flh_2_xyz"):
         input_nr = 3
         return_nr = 3
     elif args_function_title == "neu":
@@ -359,10 +344,10 @@ def argparse_data():
         file_title = args.open_file
         args_function_title = args.file_functions
         names = dict(zip(["hirvonen", "flh_2_xyz", "neu", "fl_2_1992", "fl_2_xygk",
-                         "fl_2_2000", "flh_k_xyz_80", "degrees_2_dms"],
+                         "fl_2_2000", "degrees_2_dms"],
                          [elipsoid.hirvonen, elipsoid.flh_2_xyz,
                          elipsoid.neu, elipsoid.fl_2_1992, elipsoid.fl_2_xygk, elipsoid.fl_2_2000,
-                         elipsoid.flh_k_xyz_80, Transformations.degrees_2_dms]))
+                         Transformations.degrees_2_dms]))
 
         from_file_to_file(elipsoid,
                           args_function_title, file_title,
@@ -380,8 +365,6 @@ def argparse_data():
         print(elipsoid.hirvonen(*args.hirvonen))
     if args.neu:
         print(elipsoid.neu(*args.neu))
-    if args.flh_k_xyz_80:
-        print(elipsoid.flh_k_xyz_80(*args.flh_k_xyz_80))
     if args.degrees_2_dms:
         print(Transformations.degrees_2_dms(args.degrees_2_dms))
 
