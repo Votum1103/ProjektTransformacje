@@ -12,8 +12,7 @@ Program umożliwia konwertowanie współrzędnych z następujących elipsoid: **
 ```mermaid
 graph LR
 A[degrees] -->|degrees_2_dms| B[dms]
-C[radians] -->|radians_2_dms| D[dms]
-E[φ,λ,h Krasowski] -->|flh_k_xyz_80| F[x,y,z GRS80]
+C[φ,λ,h Krasowski] -->|flh_k_xyz_80| D[x,y,z GRS80]
 G[x,y,z] -->|hirvonen| H[φ,λ,h]
 I[φ,λ,h] -->|flh_2_xyz| J[x,y,z]
 K[x,y,z odbiornika x,y,z staelity] -->|neu| L[n,e,u]
@@ -50,34 +49,6 @@ python transformacje.py GRS80 -dd 50.4565676
 Program zamieni podaną wartośc i zwróci w konsoli w postaci:
 ```bash
 50°27'23.64336"
-```
-- <span style="color:green">**radians_2_dms**</span>
-
-Funkcja zamienia wartość w radianach na wartość w stopniach, minutach i sekundach i zwraca ją jako str: deg°min'sec"
-
-| Funkcja 	| radians_2_dms 	|
-|---	|---	|
-| liczba <br>argumentów 	| 1 	|
-| argumenty 	| radians 	|
-| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff radians_2_dms -cd \<numer kolumny\> <br><br>flaga -cd jest opcjonalna, gdy nie zostanie dodana funkcja<br> zamieni wszystkie wartości w pliku 	|
-| wywołanie w cmd 	| \<elipsoida\> -rd  \<kąt w radianach\> 	|
-
-<br>
-
-**Przykładowe wywołanie:**
-```bash
-python transformacje.py GRS80 -o dane.txt -ff radians_2_dms -cd 2
-```
-W tym wypadku program zamieni tylko dane znajdujące się w drugiej kolumnie
-w pliku wejściowym
-
-```bash
-python transformacje.py GRS80 -rd 0.4565676
-
-```
-Program zamieni podaną wartośc i zwróci w konsoli w postaci:
-```bash
-26°9'33.82755"
 ```
 
 - <span style="color:green">**flh_k_xyz_80**</span>
