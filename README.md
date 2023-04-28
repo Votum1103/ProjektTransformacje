@@ -13,9 +13,10 @@ Program umożliwia konwertowanie współrzędnych z następujących elipsoid: **
 graph LR
 A[degrees] -->|degrees_2_dms| B[dms]
 C[φ,λ,h Krasowski] -->|flh_k_xyz_80| D[x,y,z GRS80]
-G[x,y,z] -->|hirvonen| H[φ,λ,h]
-I[φ,λ,h] -->|flh_2_xyz| J[x,y,z]
-K[x,y,z odbiornika x,y,z staelity] -->|neu| L[n,e,u]
+E[x,y,z] -->|hirvonen| F[φ,λ,h]
+G[φ,λ,h] -->|flh_2_xyz| H[x,y,z]
+I[x,y,z odbiornika x,y,z staelity] -->|neu| J[n,e,u]
+K[φ,λ] -->|fl_2_xygk| L[x,y G-K]
 M[φ,λ] -->|fl_2_2000| N[x,y PL2000]
 O[φ,λ] -->|fl_2_1992| P[x,y PL1992]
 ```
@@ -151,6 +152,32 @@ Program zwróci n,e,u w konsoli w postaci:
 ```bash
 (1433804.6566615142, 9889126.110578151, 18418268.45441226)
 ```
+- <span style="color:green">**fl_2_xygk**</span>
+
+Funkcja przelicza współrzędne geodezyjne φ, λ na współrzędne geocentryczne w układzie Gaussa-Krügera. Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego. Południk osiowy l0 należy podać w stopniach. ynik w postaci: (X_gk,Y_gk)
+
+| Funkcja 	| fl_2_xygk 	|
+|---	|---	|
+| liczba <br>argumentów 	| 3<br>dla elipsoidy Krasowskiego:<br>4 	|
+| argumenty 	| phi, lam, l0<br><br>dla elipsoidy Krasowskiego:<br><br>phi, lam, l0, h 	|
+| wywołanie z pliku 	| \<elipsoida\> -o \<plik\> -ff fl_2_xygk  	|
+| wywołanie w cmd 	| \<elipsoida\> -gk  \<phi\> \<lam\> \<l0\><br><br>dla elipsoidy Krasowskiego:<br><br>Krasowski -gk  \<phi\> \<lam\> \<l0\> \<h\>  	|
+
+**Przykładowe wywołanie:**
+```bash
+python transformacje.py GRS80 -o dane.txt -ff fl_2_xygk
+```
+Program na podstawie danych z podanego pliku (dane.txt) współrzędnych
+phi;lam;l0 lub dla elipsoidy Krasowskiego: phi;lam;l0;h utworzy plik results.txt, w którym w każdym wierszu będą oddzielone od siebie średnikiem współrzędne xgk;ygk
+
+```bash
+python transformacje.py Krasowski -gk 50.000373107222224 16.001741142222222 15 259.5263
+```
+Program zwróci xgk, ygk w konsoli w postaci:
+```bash
+(5541326.34611664, 71695.12555565967)
+```
+
 - <span style="color:green">**fl_2_2000**</span>
 
 Funkcja przelicza współrzędne geodezyjne φ, λ na współrzędne geocentryczne w układzie PL-2000. Przy wyborze elipsoidy Krasowskiego należy podać h_krasowskiego. Południk osiowy l0 należy podać w stopniach. ynik w postaci: (X_2000,Y_2000)
