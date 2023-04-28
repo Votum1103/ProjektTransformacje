@@ -6,20 +6,20 @@ class Transformations:
 
     def __init__(self, elipsoid_name: str):
         """
-        nazwa elipsoidy musi być wybrana spośród: GRS80, WGS84, Krasowski
+        nazwa elipsoidy musi być wybrana spośród: grs80, wgs84, krasowski
 
         """
 
         self.elipsoid_name = elipsoid_name
-        assert self.elipsoid_name == "GRS80" or "WGS84" or "Krasowski",\
+        assert self.elipsoid_name == "grs80" or "wgs84" or "krasowski",\
             "The specified ellipsoid is not supported"
-        if elipsoid_name == "GRS80":
+        if elipsoid_name == "grs80":
             self.a = 6378137
             self.e2 = 0.00669438002290
-        elif elipsoid_name == "WGS84":
+        elif elipsoid_name == "wgs84":
             self.e2 = 0.00669437999014
             self.a = 6378137
-        elif elipsoid_name == "Krasowski":
+        elif elipsoid_name == "krasowski":
             self.a = 6378245
             self.e2 = 0.00669342162296
 
@@ -115,7 +115,7 @@ zwraca wynik w postaci: (n,e,u)
         '''
         a = self.a
         e2 = self.e2
-        if self.elipsoid_name == "Krasowski":
+        if self.elipsoid_name == "krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
             xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
@@ -225,7 +225,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
         input_nr = 6
         return_nr = 1
     elif args_function_title in ("fl_2_1992", "fl_2_2000", "fl_2_xygk"):
-        if elipsoid.elipsoid_name == "Krasowski":
+        if elipsoid.elipsoid_name == "krasowski":
             input_nr = 4
             return_nr = 2
         else:
@@ -278,9 +278,9 @@ def argparse_data():
     """
     parser = argparse.ArgumentParser(
         description="The program converts coordinates between coordinate systems")
-    parser.add_argument("elipsoid", default="GRS80",
-                        choices=["WGS84", "GRS80", "Krasowski"],
-                        help="Enter elipsoid type. Chose from WGS84, GRS80 or Krasowski")
+    parser.add_argument("elipsoid", default="grs80",
+                        choices=["wgs84", "grs80", "krasowski"],
+                        help="Enter elipsoid type. Choose from 'wgs84', 'grs80' and 'krasowski'")
     parser.add_argument("--open_file", "-o", nargs="?", default=None,
                         help="If you want to enter coordinates in file specify file tittle")
 
@@ -302,7 +302,7 @@ def argparse_data():
     parser.add_argument("--fl_2_xygk", "-gk", nargs="*",
                         type=float, help="""
     Program transforms coordinates from phi,
-    lambda to x, y in Gauss-Krüger coordinate. If elipsoid GRS80 or WGS84 is chosen
+    lambda to x, y in Gauss-Krüger coordinate. If elipsoid grs80 or WGS84 is chosen
     enter phi, lam and prime meridian,
     if you chose Krasowski elipsoid you need to add height at the end""")
     parser.add_argument("--fl_2_1992", "-92", nargs="*", type=float, help="""
@@ -320,7 +320,7 @@ def argparse_data():
 
     parser.add_argument("--flh_k_xyz_80", "-kg", nargs="*",
                         type=float, help=""" Program transforms coordinates
-    x,y,z from Krasowski elipsoid to x,y,z on GRS80 elipsoid.
+    x,y,z from Krasowski elipsoid to x,y,z on grs80 elipsoid.
     Before chosing this method make sure you entered Krasowski as elipsoid name""")
 
     parser.add_argument("--degrees_2_dms", "-dd",
