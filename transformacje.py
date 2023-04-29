@@ -118,18 +118,16 @@ zwraca wynik w postaci: (n,e,u)
         if self.elipsoid_name == "krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
-            xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)           
-            Txyz = np.array([-33.4297,146.5746,76.2865])
-
-            xyzp = (Txyz@np.array([xk,yk,zk])).T
-            d = np.array[[1 - 0.84078048E-6,- 4.08959962E-6,-0.25614575E-6],
-                            [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
-                            [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
-
-            xyz_grs80 = xyzp@d
+            xk_yk_zk = np.array(self.flh_2_xyz(phi, lam, h_krasowski))
+            Txyz = np.array([-33.4297, 146.5746, 76.2865])
+            delty = xk_yk_zk-Txyz
+            d = np.array([[1 - 0.84078048E-6, - 4.08959962E-6, -0.25614575E-6],
+                         [4.08960007E-6, 1 - 0.84078196E-6, 1.73888389E-6],
+                         [0.25613864E-6, -1.73888494E-6, 1 - 0.84077363E-6]])
+            xyz_grs80 = d@delty.T
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
-            phi_lam = self.hirvonen(xyz_grs80[0], xyz_grs80[1], xyz_grs80[2])
+            phi_lam = self.hirvonen(*xyz_grs80)
             phi = phi_lam[0]
             lam = phi_lam[1]
         phi = np.deg2rad(phi)
@@ -154,12 +152,12 @@ zwraca wynik w postaci: (n,e,u)
         xgk = sig + xgk_part_1 * (1 + xgk_part_2 + xgk_part_3)
 
         ygk_part_1 = dl * N * np.cos(phi)
-        ygk_part_2 = (dl ** 2) / 6 * np.cos(phi) ** 2 * (1 - t ** 2 + ni2)
-        ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
-            (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
+        ygk_part_2 = (dl * 2) / 6 * np.cos(phi) * 2 * (1 - t ** 2 + ni2)
+        ygk_part_3 = (dl * 4) / 120 * np.cos(phi) * 4 * \
+            (5 - 18 * t * 2 + t * 4 + 14 * ni2 - 58 * ni2 * t ** 2)
         ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
         return (xgk, ygk)
-
+    
     def fl_2_2000(self, phi: float, lam: float,
                   l0: float, h_krasowski=None) -> tuple[float, float]:
         '''
