@@ -113,10 +113,11 @@ zwraca wynik w postaci: (n,e,u)
         wynik w postaci: (X_2000,Y_2000)
 
         '''
+        a = self.a
+        e2 = self.e2
         if self.elipsoid_name == "krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
-            self.a = 
             xk_yk_zk = np.array(self.flh_2_xyz(phi, lam, h_krasowski))
             Txyz = np.array([-33.4297, 146.5746, 76.2865])
             delty = xk_yk_zk-Txyz
@@ -151,14 +152,15 @@ zwraca wynik w postaci: (n,e,u)
         xgk = sig + xgk_part_1 * (1 + xgk_part_2 + xgk_part_3)
 
         ygk_part_1 = dl * N * np.cos(phi)
-        ygk_part_2 = (dl * 2) / 6 * np.cos(phi) * 2 * (1 - t ** 2 + ni2)
-        ygk_part_3 = (dl * 4) / 120 * np.cos(phi) * 4 * \
-            (5 - 18 * t * 2 + t * 4 + 14 * ni2 - 58 * ni2 * t ** 2)
+        ygk_part_2 = (dl ** 2) / 6 * np.cos(phi) ** 2 * (1 - t ** 2 + ni2)
+        ygk_part_3 = (dl ** 4) / 120 * np.cos(phi) ** 4 * \
+            (5 - 18 * t ** 2 + t ** 4 + 14 * ni2 - 58 * ni2 * t ** 2)
         ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
-        self.a = 6378245
-        self.e2 = 0.00669342162296
+        if self.elipsoid_name == "krasowski":
+            self.a = 6378245
+            self.e2 = 0.00669342162296
         return (xgk, ygk)
-    
+
     def fl_2_2000(self, phi: float, lam: float,
                   l0: float, h_krasowski=None) -> tuple[float, float]:
         '''
@@ -170,13 +172,7 @@ zwraca wynik w postaci: (n,e,u)
         '''
         m = 0.999923
         xgk, ygk = self.fl_2_xygk(phi, lam, l0, h_krasowski)
-        pas = nr = 0
-        for _ in range(30):
-            if round(l0/3, 0) == pas:
-                nr = pas
-                break
-            pas += 1
-
+        nr = l0/3
         x20 = xgk * m
         y20 = ygk * m + nr * 1e6 + 5e5
         return (x20, y20)
@@ -252,6 +248,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
                 f"""You didn't provide enough parameters,
     you should enter {input_nr} values separated by a semicolon in each line of the file"""
             results.append(function(*params))
+
         with open("results.txt", "w") as file:
             file.write('\n'.join('%s;'*return_nr % x for x in results))
 
