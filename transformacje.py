@@ -119,6 +119,7 @@ zwraca wynik w postaci: (n,e,u)
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
             xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
+            
             params = np.array[[-33.4297,146.5746,76.2865], # type: ignore
                     [1 - 0.84078048E-6,- 4.08959962E-6,-0.25614575E-6],
                     [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
