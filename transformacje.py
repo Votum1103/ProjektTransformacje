@@ -113,11 +113,10 @@ zwraca wynik w postaci: (n,e,u)
         wynik w postaci: (X_2000,Y_2000)
 
         '''
-        a = self.a
-        e2 = self.e2
         if self.elipsoid_name == "krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
+            self.a = 
             xk_yk_zk = np.array(self.flh_2_xyz(phi, lam, h_krasowski))
             Txyz = np.array([-33.4297, 146.5746, 76.2865])
             delty = xk_yk_zk-Txyz
@@ -156,6 +155,8 @@ zwraca wynik w postaci: (n,e,u)
         ygk_part_3 = (dl * 4) / 120 * np.cos(phi) * 4 * \
             (5 - 18 * t * 2 + t * 4 + 14 * ni2 - 58 * ni2 * t ** 2)
         ygk = ygk_part_1 * (1 + ygk_part_2 + ygk_part_3)
+        self.a = 6378245
+        self.e2 = 0.00669342162296
         return (xgk, ygk)
     
     def fl_2_2000(self, phi: float, lam: float,
@@ -171,7 +172,7 @@ zwraca wynik w postaci: (n,e,u)
         xgk, ygk = self.fl_2_xygk(phi, lam, l0, h_krasowski)
         pas = nr = 0
         for _ in range(30):
-            if round(lam/3, 0) == pas:
+            if round(l0/3, 0) == pas:
                 nr = pas
                 break
             pas += 1
