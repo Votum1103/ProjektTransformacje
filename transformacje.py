@@ -119,20 +119,18 @@ zwraca wynik w postaci: (n,e,u)
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
             xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
-            params = np.array[[-33.4297,146.5746,76.2865], # type: ignore
-                    [1 - 0.84078048E-6,- 4.08959962E-6,-0.25614575E-6],
-                    [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
-                    [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
             
-            x_grs80 = params[1][0] * (xk - params[0][0]) + params[1][1] * \
-                            (yk - params[0][1]) + params[1][2] * (zk - params[0][2])
-            y_grs80 = params[2][0] * (xk - params[0][0]) + params[2][1] * \
-                            (yk - params[0][1]) + params[2][2] * (zk - params[0][2])
-            z_grs80 = params[3][0] * (xk - params[0][0]) + params[3][1] * \
-                            (yk - params[0][1]) + params[3][2] * (zk - params[0][2])
+            Txyz = np.array([-33.4297,146.5746,76.2865])
+
+            xyzp = (Txyz@np.array([xk,yk,zk])).T
+            d = np.array[[1 - 0.84078048E-6,- 4.08959962E-6,-0.25614575E-6],
+                            [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
+                            [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
+
+            xyz_grs80 = xyzp@d
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
-            phi_lam = self.hirvonen(x_grs80, y_grs80, z_grs80)
+            phi_lam = self.hirvonen(xyz_grs80[0], xyz_grs80[1], xyz_grs80[2])
             phi = phi_lam[0]
             lam = phi_lam[1]
         phi = np.deg2rad(phi)
