@@ -119,27 +119,17 @@ zwraca wynik w postaci: (n,e,u)
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
             xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
-            params = {
-                'Tx': -33.4297,
-                'Ty': 146.5746,
-                'Tz': 76.2865,
-                'd11': 1 - 0.84078048E-6,
-                'd12': - 4.08959962E-6,
-                'd13': -0.25614575E-6,
-                'd21': +4.08960007E-6,
-                'd22': 1 - 0.84078196E-6,
-                'd23': +1.73888389E-6,
-                'd31': +0.25613864E-6,
-                'd32': -1.73888494E-6,
-                'd33': 1 - 0.84077363E-6
-            }
-
-            x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
-                (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
-            y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
-                (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
-            z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
-                (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
+            params = np.array[[-33.4297,146.5746,76.2865], # type: ignore
+                    [1 - 0.84078048E-6,- 4.08959962E-6,-0.25614575E-6],
+                    [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
+                    [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
+            
+        x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
+                        (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
+        y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
+                        (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
+        z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
+                        (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
             phi_lam = self.hirvonen(x_grs80, y_grs80, z_grs80)
