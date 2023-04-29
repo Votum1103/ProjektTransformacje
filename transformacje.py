@@ -118,9 +118,7 @@ zwraca wynik w postaci: (n,e,u)
         if self.elipsoid_name == "krasowski":
             assert h_krasowski is not None,\
                 "You didn't specify the height for the Krasowski ellipsoid"
-            xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)
-            
-<<<<<<< HEAD
+            xk, yk, zk = self.flh_2_xyz(phi, lam, h_krasowski)           
             Txyz = np.array([-33.4297,146.5746,76.2865])
 
             xyzp = (Txyz@np.array([xk,yk,zk])).T
@@ -129,14 +127,6 @@ zwraca wynik w postaci: (n,e,u)
                             [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
 
             xyz_grs80 = xyzp@d
-=======
-        x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
-                        (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
-        y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
-                        (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
-        z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
-                        (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
->>>>>>> parent of ff79509 (Zmieniono obliczenie x,y,z GRS80 w fl_2_xygk, z odwoływania się do słownika na odwoływanie się do macierzy)
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
             phi_lam = self.hirvonen(xyz_grs80[0], xyz_grs80[1], xyz_grs80[2])
