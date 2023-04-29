@@ -124,12 +124,12 @@ zwraca wynik w postaci: (n,e,u)
                     [4.08960007E-6,1 - 0.84078196E-6,1.73888389E-6],
                     [0.25613864E-6,-1.73888494E-6,1 - 0.84077363E-6]]
             
-        x_grs80 = params["d11"] * (xk - params["Tx"]) + params["d12"] * \
-                        (yk - params["Ty"]) + params["d13"] * (zk - params["Tz"])
-        y_grs80 = params["d21"] * (xk - params["Tx"]) + params["d22"] * \
-                        (yk - params["Ty"]) + params["d23"] * (zk - params["Tz"])
-        z_grs80 = params["d31"] * (xk - params["Tx"]) + params["d32"] * \
-                        (yk - params["Ty"]) + params["d33"] * (zk - params["Tz"])
+            x_grs80 = params[1][0] * (xk - params[0][0]) + params[1][1] * \
+                            (yk - params[0][1]) + params[1][2] * (zk - params[0][2])
+            y_grs80 = params[2][0] * (xk - params[0][0]) + params[2][1] * \
+                            (yk - params[0][1]) + params[2][2] * (zk - params[0][2])
+            z_grs80 = params[3][0] * (xk - params[0][0]) + params[3][1] * \
+                            (yk - params[0][1]) + params[3][2] * (zk - params[0][2])
             e2 = self.e2 = 0.00669438002290
             a = self.a = 6378137
             phi_lam = self.hirvonen(x_grs80, y_grs80, z_grs80)
