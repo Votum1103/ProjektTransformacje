@@ -205,7 +205,7 @@ def from_file_to_file(elipsoid, args_function_title: str,
         return_nr = 3
     elif args_function_title == "neu":
         input_nr = 6
-        return_nr = 1
+        return_nr = 3
     elif args_function_title in ("fl_2_1992", "fl_2_2000", "fl_2_xygk"):
         if elipsoid.elipsoid_name == "krasowski":
             input_nr = 4
@@ -248,7 +248,6 @@ def from_file_to_file(elipsoid, args_function_title: str,
                 f"""You didn't provide enough parameters,
     you should enter {input_nr} values separated by a semicolon in each line of the file"""
             results.append(function(*params))
-
         with open("results.txt", "w") as file:
             file.write('\n'.join('%s;'*return_nr % x for x in results))
 
